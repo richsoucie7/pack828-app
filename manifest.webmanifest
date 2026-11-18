@@ -1,0 +1,17 @@
+{
+  "name": "Pack 828",
+  "short_name": "Pack 828",
+  "description": "Pack 828 families and leaders: calendar, announcements, to-dos, scout accounts, advancement and expenses.",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0A1F4D",
+  "theme_color": "#0A1F4D",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

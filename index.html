@@ -1,0 +1,962 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0A1F4D">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Pack 828">
+<meta name="description" content="Pack 828 families and leaders: calendar, announcements, to-dos, scout accounts, advancement and expenses.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icons/icon-96.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bitter:wght@600;700;800&display=swap" rel="stylesheet">
+<title>Pack 828</title>
+<style>
+:root{
+  --navy:#0033A0; --deep:#0A1F4D; --gold:#F2AA00; --gold-soft:#FFF4D6; --green:#00833D; --green-soft:#E3F3EA;
+  --paper:#F3F5F9; --surface:#FFFFFF; --ink:#13213F; --muted:#5A6683; --line:#DCE2EC; --red:#B42318; --red-soft:#FDECEA;
+  --display:"Bitter", Georgia, "Times New Roman", serif;
+  --body:system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  --nav-h:64px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){
+  :root{ --paper:#0C1428; --surface:#141E38; --ink:#E8EDF7; --muted:#9AA7C2; --line:#25314F;
+    --gold-soft:#3A2F10; --green-soft:#0F2E20; --red-soft:#3A1614; color-scheme: dark; }
+}
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+.sr{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;pointer-events:none}
+html,body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.5 var(--body);-webkit-text-size-adjust:100%}
+body{min-height:100vh}
+a{color:var(--navy)}
+@media (prefers-color-scheme: dark){ a{color:#8FB1FF} }
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+h1,h2,h3{font-family:var(--display);line-height:1.2;margin:0}
+.wrap{max-width:640px;margin:0 auto;padding:0 16px}
+
+/* Top bar */
+.top{position:sticky;top:0;z-index:20;background:var(--deep);color:#fff;border-bottom:3px solid var(--gold);
+  padding-top:env(safe-area-inset-top)}
+.top .wrap{display:flex;align-items:center;gap:12px;height:56px}
+.top h1{font-size:20px;font-weight:800;letter-spacing:.01em;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.iconbtn{background:none;border:0;color:inherit;width:40px;height:40px;border-radius:20px;display:grid;place-items:center;cursor:pointer}
+.iconbtn:active{background:rgba(255,255,255,.15)}
+.iconbtn svg{width:22px;height:22px}
+.spin svg{animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+main{padding:20px 0 calc(var(--nav-h) + 28px + env(safe-area-inset-bottom))}
+.banner{margin:0 0 16px;padding:10px 14px;border-radius:10px;background:var(--gold-soft);font-size:14px}
+
+/* Bottom nav */
+.nav{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--surface);border-top:1px solid var(--line);
+  padding-bottom:env(safe-area-inset-bottom)}
+.nav .wrap{display:grid;grid-template-columns:repeat(5,1fr);height:var(--nav-h);padding:0 4px}
+.nav button{background:none;border:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  font-size:12px;color:var(--muted);cursor:pointer;position:relative}
+.nav button svg{width:24px;height:24px}
+.nav button[aria-current="page"]{color:var(--navy);font-weight:600}
+@media (prefers-color-scheme: dark){ .nav button[aria-current="page"]{color:var(--gold)} }
+.nav button[aria-current="page"]::before{content:"";position:absolute;top:0;left:28%;right:28%;height:3px;border-radius:0 0 3px 3px;background:var(--gold)}
+.dot{position:absolute;top:8px;right:calc(50% - 18px);min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--red);color:#fff;font-size:11px;line-height:18px;font-weight:700}
+
+/* Greeting + next-up trail sign (the one bold element) */
+.hello{font-size:26px;font-weight:800;margin:4px 0 16px}
+.sign{position:relative;display:block;width:100%;text-align:left;border:0;cursor:pointer;color:#14213F;
+  background:var(--gold);padding:16px 64px 16px 18px;border-radius:8px 0 0 8px;
+  clip-path:polygon(0 0, calc(100% - 34px) 0, 100% 50%, calc(100% - 34px) 100%, 0 100%);
+  box-shadow:inset 0 -4px 0 rgba(0,0,0,.12)}
+.sign .when{font-size:14px;font-weight:600;opacity:.85}
+.sign h2{font-size:24px;font-weight:800;margin:2px 0 4px}
+.sign .where{font-size:14px}
+.sign-post{width:10px;height:18px;margin-left:28px;background:#6B4A1E;border-radius:0 0 2px 2px}
+.empty-sign{padding:16px;border:2px dashed var(--line);border-radius:10px;color:var(--muted)}
+
+/* Quick actions */
+.quick{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0 6px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:10px 16px;border-radius:10px;
+  border:1.5px solid var(--navy);background:var(--surface);color:var(--navy);font-weight:600;text-decoration:none;cursor:pointer}
+@media (prefers-color-scheme: dark){ .btn{border-color:#5B7FD6;color:#C9D7FF} }
+.btn.primary{background:var(--navy);border-color:var(--navy);color:#fff}
+.btn.small{min-height:36px;padding:6px 12px;font-size:14px}
+.btn.danger{border-color:var(--red);color:var(--red)}
+.btn.block{width:100%}
+.btn[disabled]{opacity:.55;cursor:default}
+.btn svg{width:18px;height:18px}
+
+/* Sections + lists */
+section{margin-top:28px}
+.sec-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:8px}
+.sec-head h2{font-size:19px;font-weight:700}
+.link{background:none;border:0;color:var(--navy);font-weight:600;cursor:pointer;padding:6px 0;font-size:15px}
+@media (prefers-color-scheme: dark){ .link{color:#8FB1FF} }
+.list{background:var(--surface);border-radius:12px;border:1px solid var(--line);overflow:hidden}
+.row{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-top:1px solid var(--line);width:100%;
+  background:none;border-left:0;border-right:0;border-bottom:0;text-align:left;cursor:pointer}
+.row:first-child{border-top:0}
+.row .grow{flex:1;min-width:0}
+.row .t{font-weight:600}
+.row .s{font-size:14px;color:var(--muted)}
+.row .body{white-space:pre-wrap;margin-top:4px;font-size:15px}
+.pin{display:inline-block;width:8px;height:8px;border-radius:4px;background:var(--gold);margin-right:6px;vertical-align:middle}
+.none{padding:16px;color:var(--muted);font-size:15px}
+.pill{display:inline-block;font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px;white-space:nowrap}
+.pill.wait{background:var(--gold-soft);color:#7A5300}
+.pill.ok{background:var(--green-soft);color:var(--green)}
+.pill.bad{background:var(--red-soft);color:var(--red)}
+.pill.info{background:#E5ECFA;color:var(--navy)}
+@media (prefers-color-scheme: dark){ .pill.wait{color:#FFCF5C} .pill.ok{color:#5FD08E} .pill.info{background:#1C2B52;color:#C9D7FF} }
+
+/* Advancement by rank */
+.rank-group{margin:0 0 12px}
+.rank-group summary{list-style:none;display:flex;align-items:center;gap:10px;flex-wrap:wrap;cursor:pointer;padding:10px 2px}
+.rank-group summary::-webkit-details-marker{display:none}
+.rank-group summary::before{content:"";width:9px;height:9px;border-right:2.5px solid var(--muted);border-bottom:2.5px solid var(--muted);transform:rotate(-45deg);transition:transform .15s;margin:0 4px 0 2px}
+.rank-group[open] summary::before{transform:rotate(45deg)}
+.rg-title{font-family:var(--display);font-weight:700;font-size:19px;flex:1}
+.mark{flex:none;width:28px;height:28px;border-radius:14px;display:grid;place-items:center;font-size:13px;font-weight:700;margin-top:1px}
+.mark.done{background:var(--green);color:#fff}
+.mark.part{border:2px solid var(--gold);color:var(--ink)}
+
+/* Checkbox rows */
+.check{appearance:none;width:24px;height:24px;border:2px solid var(--muted);border-radius:6px;margin:0;flex:none;cursor:pointer;display:grid;place-items:center;background:var(--surface)}
+.check:checked{background:var(--green);border-color:var(--green)}
+.check:checked::after{content:"";width:12px;height:7px;border:3px solid #fff;border-top:0;border-right:0;transform:rotate(-45deg) translate(1px,-1px)}
+.done .t{text-decoration:line-through;color:var(--muted)}
+
+/* Calendar */
+.month{font-size:15px;font-weight:700;color:var(--muted);margin:24px 0 8px}
+.month:first-child{margin-top:0}
+.datebox{width:52px;flex:none;text-align:center;border-radius:10px;background:var(--paper);padding:6px 0}
+.datebox b{display:block;font-family:var(--display);font-size:24px;line-height:1.1;color:var(--navy)}
+@media (prefers-color-scheme: dark){ .datebox b{color:var(--gold)} }
+.datebox span{font-size:12px;color:var(--muted)}
+
+/* Money */
+.bal{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.amt{font-family:var(--display);font-weight:800;font-size:28px;color:var(--green);white-space:nowrap}
+.amt.neg{color:var(--red)}
+.amt.sm{font-size:18px;color:var(--ink)}
+.seg{display:flex;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:3px;margin-bottom:12px}
+.seg button{flex:1;border:0;background:none;padding:8px 4px;border-radius:8px;font-size:14px;font-weight:600;color:var(--muted);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--navy);color:#fff}
+.bar{height:8px;border-radius:4px;background:var(--line);margin-top:6px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--navy)}
+@media (prefers-color-scheme: dark){ .bar i{background:var(--gold)} }
+
+/* Scouts */
+.scout-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.scout-head h2{font-size:26px;font-weight:800}
+.rank{color:var(--muted);font-size:15px}
+.stat{display:flex;gap:10px;margin-top:12px}
+.stat div{flex:1;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px}
+.stat b{display:block;font-family:var(--display);font-size:26px;color:var(--navy)}
+@media (prefers-color-scheme: dark){ .stat b{color:var(--gold)} }
+.stat span{font-size:13px;color:var(--muted)}
+select.picker{width:100%;padding:12px;border-radius:10px;border:1px solid var(--line);background:var(--surface);font-weight:600}
+
+/* Bottom sheet */
+.scrim{position:fixed;inset:0;background:rgba(5,12,30,.5);z-index:40;display:none}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:41;max-height:92vh;overflow:auto;background:var(--surface);
+  border-radius:18px 18px 0 0;padding:8px 0 calc(20px + env(safe-area-inset-bottom));transform:translateY(100%);visibility:hidden;transition:transform .22s ease, visibility 0s linear .22s}
+.sheet.open{transform:none;visibility:visible;transition:transform .22s ease}
+.scrim.open{display:block}
+.grab{width:40px;height:5px;border-radius:3px;background:var(--line);margin:4px auto 10px}
+.sheet h2{font-size:21px;margin-bottom:12px}
+@media (prefers-reduced-motion: reduce){ .sheet{transition:none} }
+
+/* Forms */
+label.f{display:block;margin:0 0 14px}
+label.f > span{display:block;font-size:14px;font-weight:600;margin-bottom:4px}
+.in{width:100%;padding:12px;border-radius:10px;border:1px solid var(--line);background:var(--paper);min-height:46px}
+textarea.in{min-height:110px;resize:vertical}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.toggle{display:flex;align-items:center;gap:10px;margin:0 0 14px;font-size:15px}
+.hint{font-size:13px;color:var(--muted);margin:-8px 0 14px}
+.picklist{max-height:240px;overflow:auto;border:1px solid var(--line);border-radius:10px;margin-bottom:14px}
+.picklist label{display:flex;gap:10px;align-items:center;padding:10px 12px;border-top:1px solid var(--line)}
+.picklist label:first-child{border-top:0}
+.picklist .grp{padding:8px 12px;font-size:13px;font-weight:700;color:var(--muted);background:var(--paper)}
+.thumb{max-width:100%;max-height:220px;border-radius:10px;margin:0 0 14px;display:block}
+.err{color:var(--red);font-size:14px;margin:0 0 12px}
+
+/* Toast */
+.toast{position:fixed;left:50%;bottom:calc(var(--nav-h) + 20px + env(safe-area-inset-bottom));transform:translateX(-50%);
+  background:var(--deep);color:#fff;padding:10px 16px;border-radius:10px;z-index:60;font-size:15px;max-width:90vw;display:none}
+.toast.show{display:block}
+
+/* Login */
+.login{min-height:100vh;background:var(--deep);color:#fff;display:flex;flex-direction:column;justify-content:center;
+  padding:calc(24px + env(safe-area-inset-top)) 24px calc(24px + env(safe-area-inset-bottom))}
+.login .logo{width:132px;height:132px;border-radius:66px;background:#fff;display:block;margin:0 auto 18px;object-fit:contain;border:4px solid var(--gold)}
+.login h1{font-size:34px;text-align:center;font-weight:800}
+.login p.sub{text-align:center;opacity:.85;margin:6px 0 28px}
+.login form{max-width:400px;width:100%;margin:0 auto}
+.login .in{background:#fff;color:#13213F;border:0;font-size:18px}
+.login .btn.primary{background:var(--gold);border-color:var(--gold);color:#14213F;width:100%;margin-top:4px}
+.login .link{color:#fff;display:block;margin:14px auto 0}
+.login .msg{min-height:24px;text-align:center;margin-top:14px;font-size:15px}
+.gbtn{display:flex;justify-content:center;min-height:44px}
+.or{display:flex;align-items:center;gap:12px;margin:18px 0;opacity:.8;font-size:14px}
+.or::before,.or::after{content:"";flex:1;height:1px;background:rgba(255,255,255,.35)}
+.login .tip{background:rgba(255,255,255,.12);border-radius:10px;padding:10px 12px;font-size:14px;margin:0 0 18px}
+.code-in{letter-spacing:.4em;text-align:center;font-family:var(--display);font-size:26px !important}
+.small{font-size:13px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div class="scrim" id="scrim" data-act="closeSheet"></div>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title"><div class="grab"></div><div class="wrap" id="sheet-body"></div></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* ===== Paste the Apps Script web app URL (ends in /exec) here ===== */
+const API_URL = 'https://script.google.com/macros/s/AKfycbxt6d8Vl0sCa9zgg9MFU4XHWBNr6vsfiB_lAnYaKzbYrUzRZCfvQGtVsIS222Mi5QmC/exec';
+const APP_VERSION = '1.5.0';
+/* Optional: paste the OAuth Web client ID to turn on "Sign in with Google" (see SETUP.md) */
+const GOOGLE_CLIENT_ID = 'PASTE_GOOGLE_CLIENT_ID_HERE';
+const googleOn = () => GOOGLE_CLIENT_ID.indexOf('PASTE_') !== 0;
+const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const isStandalone = () => window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+
+const S = {
+  token: localStorage.getItem('p828.token') || '',
+  data: null, tab: 'home', sub: null, scout: localStorage.getItem('p828.scout') || '',
+  syncing: false, offline: false, lastSync: Number(localStorage.getItem('p828.lastSync') || 0),
+  expFilter: 'review', loginStep: 'email', loginEmail: '', installEvt: null
+};
+try { S.data = JSON.parse(localStorage.getItem('p828.data') || 'null'); } catch (e) { S.data = null; }
+
+/* ---------- Utilities ---------- */
+const $ = s => document.querySelector(s);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const linkify = s => esc(s).replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
+const money = n => (Number(n) || 0).toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+const ymd = s => { const [y, m, d] = String(s).slice(0, 10).split('-').map(Number); return new Date(y, m - 1, d); };
+const todayStr = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+const first = n => String(n || '').trim().split(/\s+/)[0];
+const D = () => S.data || {};
+const U = () => D().user || {};
+
+function fmtDay(d, opts) { return d.toLocaleDateString('en-US', opts || { weekday: 'short', month: 'short', day: 'numeric' }); }
+function fmtTime(d) { return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }); }
+function shortDate(s) { return s ? fmtDay(ymd(s), { month: 'short', day: 'numeric', year: 'numeric' }) : ''; }
+function evStart(ev) { return ev.allDay ? ymd(ev.start) : new Date(ev.start); }
+function evEnd(ev) { return ev.allDay ? new Date(ymd(ev.end).getTime() - 1) : new Date(ev.end); }
+function dayWord(d) {
+  const t = new Date(); t.setHours(0, 0, 0, 0);
+  const x = new Date(d); x.setHours(0, 0, 0, 0);
+  const diff = Math.round((x - t) / 864e5);
+  if (diff === 0) return 'Today';
+  if (diff === 1) return 'Tomorrow';
+  return fmtDay(d, { weekday: 'long', month: 'short', day: 'numeric' });
+}
+function whenText(ev) {
+  const s = evStart(ev);
+  if (ev.allDay) {
+    const e = evEnd(ev);
+    return (s.toDateString() === e.toDateString()) ? dayWord(s) + ', all day' : dayWord(s) + ' to ' + fmtDay(e);
+  }
+  return dayWord(s) + ' at ' + fmtTime(s);
+}
+function upcoming() { const now = new Date(); return (D().events || []).filter(e => evEnd(e) >= now); }
+function fiscalStart() {
+  const m = D().fiscalStartMonth || 8, t = new Date();
+  return new Date(t.getMonth() + 1 >= m ? t.getFullYear() : t.getFullYear() - 1, m - 1, 1);
+}
+function toast(msg) {
+  const t = $('#toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('show'), 3200);
+}
+
+const ICON = {
+  home: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>',
+  cal: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>',
+  scout: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 2l2.6 5.6 6 .7-4.5 4.1 1.2 6L12 15.5 6.7 18.4l1.2-6L3.4 8.3l6-.7z"/></svg>',
+  money: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="13" rx="2"/><path d="M2 10h20M16 15h2"/></svg>',
+  more: '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>',
+  refresh: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 12a8 8 0 1 1-2.3-5.6M20 4v5h-5"/></svg>',
+  back: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>',
+  camera: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>'
+};
+
+/* ---------- API ---------- */
+async function api(action, payload) {
+  const res = await fetch(API_URL, {
+    method: 'POST', redirect: 'follow',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify(Object.assign({ action, token: S.token }, payload || {}))
+  });
+  const j = await res.json();
+  if (!j.ok) {
+    if (j.code === 'AUTH') { signOutLocal(); throw new Error(j.error); }
+    throw new Error(j.error || 'Something went wrong. Try again.');
+  }
+  return j;
+}
+
+async function refresh(quiet) {
+  if (!S.token || S.syncing) return;
+  S.syncing = true; renderTop();
+  try {
+    const d = await api('bootstrap');
+    S.data = d; S.offline = false; S.lastSync = Date.now();
+    localStorage.setItem('p828.data', JSON.stringify(d));
+    localStorage.setItem('p828.lastSync', String(S.lastSync));
+  } catch (e) {
+    if (!S.token) { render(); return; }
+    S.offline = true;
+    if (!quiet) toast(navigator.onLine ? e.message : 'No connection. Showing saved info.');
+  } finally {
+    S.syncing = false; render();
+  }
+}
+
+function signOutLocal() {
+  S.token = ''; S.data = null;
+  ['p828.token', 'p828.data', 'p828.lastSync', 'p828.scout'].forEach(k => localStorage.removeItem(k));
+  S.loginStep = 'email'; render();
+}
+
+/* ---------- Shell ---------- */
+function render() {
+  const app = $('#app');
+  if (API_URL.indexOf('PASTE_') === 0) { app.innerHTML = setupNeeded(); return; }
+  if (!S.token) { app.innerHTML = loginView(); mountGoogle(); return; }
+  if (!S.data) { app.innerHTML = '<header class="top" id="top"></header><main><div class="wrap"><p class="none">Loading your pack...</p></div></main>'; renderTop(); return; }
+  app.innerHTML = '<header class="top" id="top"></header><main><div class="wrap" id="view"></div></main><nav class="nav" aria-label="Main"><div class="wrap" id="navbar"></div></nav>';
+  renderTop(); renderNav();
+  $('#view').innerHTML = (S.offline ? '<p class="banner">You are offline. Showing what was saved ' + (S.lastSync ? 'at ' + fmtTime(new Date(S.lastSync)) + ' on ' + fmtDay(new Date(S.lastSync)) : 'earlier') + '.</p>' : '') + viewHtml();
+}
+
+function renderTop() {
+  const top = $('#top'); if (!top) return;
+  const titles = { home: 'Pack 828', calendar: 'Calendar', scouts: 'Scouts', money: 'Money', more: 'More',
+    announcements: 'Announcements', todos: 'To-do list', scoutbook: 'Scoutbook to-do' };
+  const back = S.sub ? '<button class="iconbtn" data-act="back" aria-label="Back">' + ICON.back + '</button>' : '';
+  top.innerHTML = '<div class="wrap">' + back + '<h1>' + esc(titles[S.sub || S.tab]) + '</h1>' +
+    '<button class="iconbtn ' + (S.syncing ? 'spin' : '') + '" data-act="refresh" aria-label="Refresh">' + ICON.refresh + '</button></div>';
+}
+
+function renderNav() {
+  const tabs = [['home', 'Home', ICON.home], ['calendar', 'Calendar', ICON.cal], ['scouts', 'Scouts', ICON.scout], ['money', 'Money', ICON.money], ['more', 'More', ICON.more]];
+  const queue = U().isLeader ? (D().advancement || []).filter(a => !a.inScoutbook).length : 0;
+  const review = U().isFinance ? (D().expenses || []).filter(e => e.status === 'Submitted').length : 0;
+  $('#navbar').innerHTML = tabs.map(([k, label, ic]) => {
+    const badge = k === 'scouts' && queue ? '<span class="dot">' + queue + '</span>' : (k === 'money' && review ? '<span class="dot">' + review + '</span>' : '');
+    return '<button data-act="tab" data-tab="' + k + '"' + (S.tab === k ? ' aria-current="page"' : '') + '>' + ic + label + badge + '</button>';
+  }).join('');
+}
+
+function viewHtml() {
+  if (S.sub === 'announcements') return announcementsView(true);
+  if (S.sub === 'todos') return todosView(true);
+  if (S.sub === 'scoutbook') return scoutbookView();
+  return ({ home: homeView, calendar: calendarView, scouts: scoutsView, money: moneyView, more: moreView })[S.tab]();
+}
+
+/* ---------- Login ---------- */
+function setupNeeded() {
+  return '<div class="login"><h1>Almost ready</h1><p class="sub">Open index.html and paste the Apps Script web app URL into API_URL, then upload it again.</p></div>';
+}
+function loginView() {
+  const emailStep = S.loginStep === 'email';
+  return '<div class="login"><img class="logo" src="icons/icon-512.png" alt="Pack 828 logo"><h1>Pack 828</h1>' +
+    '<p class="sub">For Pack 828 families and leaders</p>' +
+    (emailStep && isIOS && !isStandalone() ? '<p class="tip">On iPhone, add the app to your Home Screen first (tap Share, then Add to Home Screen), then sign in from there.</p>' : '') +
+    (emailStep && googleOn() ? '<div style="max-width:400px;width:100%;margin:0 auto"><div class="gbtn" id="gbtn"></div><p class="or">or use an email code</p></div>' : '') +
+    (emailStep
+      ? '<form data-form="requestCode"><label class="f"><span>Your email</span><input class="in" type="email" name="email" autocomplete="email" required value="' + esc(S.loginEmail) + '"></label>' +
+        '<button class="btn primary" type="submit">Email me a code</button><p class="msg" id="msg">Use the email the pack has on file for you.</p></form>'
+      : '<form data-form="verifyCode"><label class="f"><span>Enter the 6-digit code sent to ' + esc(S.loginEmail) + '</span>' +
+        '<input class="in code-in" name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" required></label>' +
+        '<button class="btn primary" type="submit">Sign in</button><p class="msg" id="msg">If your email is on the pack roster, the code is on its way. Check spam too.</p>' +
+        '<button class="link" type="button" data-act="loginBack">Use a different email</button></form>') + '</div>';
+}
+
+/* ---------- Home ---------- */
+function homeView() {
+  const u = U(), h = new Date().getHours();
+  const greet = (h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening') + (u.name ? ', ' + first(u.name) : '');
+  const next = upcoming()[0];
+  const L = D().links || {};
+  let out = '<h1 class="hello">' + esc(greet) + '</h1>';
+  out += next
+    ? '<button class="sign" data-act="event" data-id="' + esc(next.id) + '" aria-label="Next up: ' + esc(next.title) + '"><div class="when">' + esc(whenText(next)) + '</div><h2>' + esc(next.title) + '</h2>' +
+      (next.location ? '<div class="where">' + esc(next.location.split(',')[0]) + '</div>' : '') + '</button><div class="sign-post" aria-hidden="true"></div>'
+    : '<div class="empty-sign">Nothing on the pack calendar yet. Check back soon.</div>';
+  out += '<div class="quick">' +
+    (L.signin ? '<a class="btn primary" href="' + esc(L.signin) + '" target="_blank" rel="noopener">Sign in at the meeting</a>' : '') +
+    (L.chatFamilies ? '<a class="btn" href="' + esc(L.chatFamilies) + '" target="_blank" rel="noopener">Pack chat</a>' : '') +
+    (u.isLeader && L.chatLeaders ? '<a class="btn" href="' + esc(L.chatLeaders) + '" target="_blank" rel="noopener">Leader chat</a>' : '') +
+    '</div>';
+  if (S.installEvt) out += '<p class="banner">Put Pack 828 on your home screen. <button class="link" data-act="install">Install the app</button></p>';
+  else if (isIOS && !isStandalone() && !localStorage.getItem('p828.iosHint')) out += '<p class="banner">Put Pack 828 on your Home Screen: tap Share, then Add to Home Screen. <button class="link" data-act="iosHint">Got it</button></p>';
+  out += announcementsView(false) + todosView(false);
+  const bals = D().balances || [];
+  if (bals.length && !u.isFinance) {
+    out += '<section><div class="sec-head"><h2>Scout account</h2><button class="link" data-act="tab" data-tab="money">Details</button></div><div class="list">' +
+      bals.map(b => '<div class="row"><div class="grow"><div class="t">' + esc(b.scout) + '</div><div class="s">As of ' + esc(shortDate(b.asOf)) + '</div>' + neededLine(b) + '</div><div class="amt sm">' + money(b.balance) + '</div></div>').join('') + '</div></section>';
+  }
+  return out;
+}
+
+/* ---------- Announcements ---------- */
+function announcementsView(full) {
+  const all = D().announcements || [], u = U();
+  const list = full ? all : all.slice(0, 3);
+  let out = '<section' + (full ? ' style="margin-top:0"' : '') + '><div class="sec-head"><h2>' + (full ? 'All announcements' : 'Announcements') + '</h2>' +
+    (u.isLeader ? '<button class="link" data-act="newAnnouncement">Post one</button>' : '') + '</div><div class="list">';
+  out += list.length ? list.map(a =>
+    '<div class="row" style="cursor:default"><div class="grow"><div class="t">' + (a.pinned ? '<span class="pin" title="Pinned"></span>' : '') + esc(a.title) + '</div>' +
+    '<div class="s">' + esc(a.author || 'Pack 828') + ', ' + esc(fmtDay(new Date(a.posted))) + (a.audience === 'Leaders' ? ' <span class="pill info">Leaders</span>' : '') + '</div>' +
+    (a.body ? '<div class="body">' + linkify(a.body) + '</div>' : '') +
+    (full && u.isLeader ? '<button class="link" style="color:var(--red)" data-act="delAnnouncement" data-id="' + esc(a.id) + '">Remove</button>' : '') +
+    '</div></div>').join('') : '<div class="none">No announcements right now.</div>';
+  out += '</div>';
+  if (!full && all.length > 3) out += '<button class="link" data-act="sub" data-sub="announcements">See all ' + all.length + '</button>';
+  return out + '</section>';
+}
+
+/* ---------- To-dos ---------- */
+function todoLabel(t) {
+  const people = D().people || [];
+  if (['Everyone', 'Leaders', 'Families'].includes(t.assignedTo)) return t.assignedTo === 'Leaders' ? 'All leaders' : t.assignedTo === 'Families' ? 'All families' : 'Everyone';
+  if (String(t.assignedTo).toLowerCase() === U().email) return 'You';
+  const p = people.find(x => x.email === String(t.assignedTo).toLowerCase());
+  return p ? (p.name || p.email) : t.assignedTo;
+}
+function todosView(full) {
+  const all = (D().todos || []).slice().sort((a, b) => (a.done - b.done) || String(a.due || '9').localeCompare(String(b.due || '9')));
+  const list = full ? all : all.filter(t => !t.done).slice(0, 5);
+  let out = '<section' + (full ? ' style="margin-top:0"' : '') + '><div class="sec-head"><h2>' + (full ? 'Everything on the list' : 'To-do') + '</h2><button class="link" data-act="newTodo">Add</button></div><div class="list">';
+  out += list.length ? list.map(t => {
+    const late = !t.done && t.due && ymd(t.due) < new Date(new Date().toDateString());
+    return '<div class="row ' + (t.done ? 'done' : '') + '" style="cursor:default"><input type="checkbox" class="check" data-act="toggleTodo" data-id="' + esc(t.id) + '" aria-label="Mark done: ' + esc(t.task) + '"' + (t.done ? ' checked' : '') + '>' +
+      '<div class="grow"><div class="t">' + esc(t.task) + '</div><div class="s">' + esc(todoLabel(t)) + (t.due ? ', due ' + esc(shortDate(t.due)) : '') +
+      (late ? ' <span class="pill bad">Overdue</span>' : '') + (t.done && t.doneBy ? ', done by ' + esc(t.doneBy) : '') + '</div>' +
+      (full && (U().isAdmin || t.createdBy === U().email) ? '<button class="link" style="color:var(--red);font-size:14px" data-act="delTodo" data-id="' + esc(t.id) + '">Delete</button>' : '') +
+      '</div></div>';
+  }).join('') : '<div class="none">' + (full ? 'Nothing here yet. Add the first task.' : 'All caught up.') + '</div>';
+  out += '</div>';
+  if (!full) out += '<button class="link" data-act="sub" data-sub="todos">See the full list</button>';
+  return out + '</section>';
+}
+
+/* ---------- Calendar ---------- */
+function calendarView() {
+  const evs = upcoming(), L = D().links || {};
+  if (!evs.length) return '<p class="none">No upcoming events on the pack calendar.</p>';
+  let out = '', month = '';
+  evs.forEach((ev, i) => {
+    const s = evStart(ev), m = s.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    if (m !== month) { out += (month ? '</div>' : '') + '<h2 class="month">' + m + '</h2><div class="list">'; month = m; }
+    out += '<button class="row" data-act="event" data-id="' + esc(ev.id) + '"><div class="datebox"><b>' + s.getDate() + '</b><span>' + s.toLocaleDateString('en-US', { weekday: 'short' }) + '</span></div>' +
+      '<div class="grow"><div class="t">' + esc(ev.title) + '</div><div class="s">' + (ev.allDay ? 'All day' : fmtTime(s) + ' to ' + fmtTime(evEnd(ev))) + '</div>' +
+      (ev.location ? '<div class="s">' + esc(ev.location.split(',')[0]) + '</div>' : '') + '</div></button>';
+  });
+  out += '</div>';
+  if (L.calendarSubscribe) out += '<p style="margin-top:20px"><a class="btn block" href="' + esc(L.calendarSubscribe) + '" target="_blank" rel="noopener">Add the pack calendar to Google Calendar</a></p>';
+  return out;
+}
+function gcalLink(ev) {
+  const f = d => d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+  const dates = ev.allDay ? ev.start.replace(/-/g, '') + '/' + ev.end.replace(/-/g, '') : f(new Date(ev.start)) + '/' + f(new Date(ev.end));
+  return 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=' + encodeURIComponent(ev.title) + '&dates=' + dates +
+    '&location=' + encodeURIComponent(ev.location || '') + '&details=' + encodeURIComponent(ev.description || '');
+}
+function eventSheet(id) {
+  const ev = (D().events || []).find(e => e.id === id); if (!ev) return;
+  openSheet('<h2 id="sheet-title">' + esc(ev.title) + '</h2><p class="t" style="margin:0 0 8px;font-weight:600">' + esc(whenText(ev)) +
+    (ev.allDay ? '' : ' to ' + fmtTime(evEnd(ev))) + '</p>' +
+    (ev.location ? '<p style="margin:0 0 12px">' + esc(ev.location) + '</p>' : '') +
+    (ev.description ? '<p style="white-space:pre-wrap;margin:0 0 16px">' + linkify(ev.description) + '</p>' : '') +
+    '<div class="quick">' + (ev.location ? '<a class="btn" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(ev.location) + '">Directions</a>' : '') +
+    '<a class="btn" target="_blank" rel="noopener" href="' + gcalLink(ev) + '">Add to my calendar</a></div>');
+}
+
+/* ---------- Scouts ---------- */
+function scoutsView() {
+  const scouts = D().scouts || [], u = U();
+  if (!scouts.length) return '<p class="none">No scouts are linked to your account yet. Ask the Cubmaster to link your scout.</p>';
+  if (!scouts.find(s => s.name === S.scout)) S.scout = (scouts.find(s => (u.scouts || []).includes(s.name)) || scouts[0]).name;
+  const sc = scouts.find(s => s.name === S.scout);
+  const queue = (D().advancement || []).filter(a => !a.inScoutbook);
+  let out = '';
+  if (u.isLeader) out += '<div class="quick" style="margin-top:0"><button class="btn primary" data-act="newAdv">Log an adventure</button>' +
+    '<button class="btn" data-act="sub" data-sub="scoutbook">Scoutbook to-do' + (queue.length ? ' (' + queue.length + ')' : '') + '</button></div>';
+  if (scouts.length > 1) out += '<label class="f" style="margin-top:12px"><span>Scout</span><select class="picker" data-act="pickScout">' +
+    scouts.map(s => '<option' + (s.name === S.scout ? ' selected' : '') + '>' + esc(s.name) + '</option>').join('') + '</select></label>';
+  const fy = fiscalStart();
+  const att = (D().attendance || []).filter(a => a.scout === sc.name && a.date && ymd(a.date) >= fy).sort((a, b) => b.date.localeCompare(a.date));
+  const adv = (D().advancement || []).filter(a => a.scout === sc.name).sort((a, b) => b.date.localeCompare(a.date));
+  const ranksEarned = adv.filter(a => a.type === 'Rank').sort((a, b) => a.date.localeCompare(b.date)).map(a => a.item.replace(/\s+rank$/i, ''));
+  const adventuresEarned = adv.filter(a => a.type !== 'Rank' && a.type !== 'Award').length;
+  out += '<div class="scout-head" style="margin-top:8px"><div><h2>' + esc(sc.name) + '</h2><div class="rank">' + esc([sc.rank, sc.den].filter(Boolean).join(' den, ') || 'Rank not set') +
+    (ranksEarned.length ? '. Ranks earned: ' + esc(ranksEarned.join(', ')) : '') + '</div></div></div>';
+  out += '<div class="stat"><div><b>' + att.length + '</b><span>Meetings and events this pack year</span></div><div><b>' + adventuresEarned + '</b><span>Adventures earned</span></div></div>';
+  const tree = advTree(sc.name);
+  const openKey = (tree.find(g => RANKS.includes(g.key) && !g.earned && g.key === sc.rank) || tree.find(g => RANKS.includes(g.key) && !g.earned) || {}).key;
+  out += '<section><div class="sec-head"><h2>Advancement</h2>' + ((D().links || {}).scoutbook ? '<a class="link" href="' + esc(D().links.scoutbook) + '" target="_blank" rel="noopener">Open Scoutbook</a>' : '') + '</div>' +
+    (tree.length ? tree.map(g => rankGroupHtml(g, sc.name, g.key === openKey)).join('')
+      : '<div class="list"><div class="none">Nothing yet. Adventures and requirements show up here from Scoutbook, and leaders can log den progress as it happens.</div></div>') + '</section>';
+  out += '<section><div class="sec-head"><h2>Recent sign-ins</h2></div><div class="list">' +
+    (att.length ? att.slice(0, 8).map(a => '<div class="row" style="cursor:default"><div class="grow"><div class="t">' + esc(a.event || 'Pack event') + '</div><div class="s">' + esc(shortDate(a.date)) + '</div></div></div>').join('')
+      : '<div class="none">No sign-ins yet this pack year. Families sign in at each meeting with the QR code.</div>') + '</div></section>';
+  return out;
+}
+const RANKS = ['Lion', 'Tiger', 'Wolf', 'Bear', 'Webelos', 'Arrow of Light'];
+const ik = s => String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').replace(/\b(adventure|adventures|award|awards|requirements)\b/g, ' ').replace(/\s+/g, ' ').trim();
+const byReq = (a, b) => String(a.req).localeCompare(String(b.req), undefined, { numeric: true });
+/* One scout's advancement grouped by rank: earned rank, each adventure (earned or in progress) and its signed-off requirements */
+function advTree(name) {
+  const cat = {}; ((D().lists || {}).adventures || []).forEach(a => { cat[a.rank + '|' + ik(a.name)] = a.type; });
+  const groups = {};
+  const G = k => (groups[k] = groups[k] || { key: k, earned: null, items: {}, rankReqs: [] });
+  const I = (k, item) => { const g = G(k), key = ik(item); return (g.items[key] = g.items[key] || { key, name: item, group: k, done: null, app: null, reqs: [], type: cat[k + '|' + key] || '' }); };
+  (D().advancement || []).filter(a => a.scout === name).forEach(a => {
+    if (a.type === 'Rank') { G(a.rank || a.item.replace(/\s+rank$/i, '')).earned = a; return; }
+    const it = I(a.type === 'Award' ? 'Awards' : (a.rank || 'Other'), a.item);
+    if (a.source === 'Scoutbook' || !it.done) it.done = a;
+    if (a.source !== 'Scoutbook') it.app = a;
+  });
+  (D().requirements || []).filter(r => r.scout === name).forEach(r => {
+    if (r.kind === 'Rank') { G(r.rank).rankReqs.push(r); return; }
+    I(r.kind === 'Award' ? 'Awards' : (r.rank || 'Other'), r.item).reqs.push(r);
+  });
+  return RANKS.filter(r => groups[r]).concat(['Awards', 'Other'].filter(k => groups[k])).map(k => groups[k]);
+}
+function rankGroupHtml(g, scout, open) {
+  const u = U(), items = Object.values(g.items), isRank = RANKS.includes(g.key);
+  let status = '';
+  if (isRank && g.earned) status = '<span class="pill ok">Earned ' + esc(shortDate(g.earned.date)) + '</span>';
+  else if (isRank) {
+    const req = items.filter(i => i.done && i.type === 'Required').length, el = items.filter(i => i.done && i.type === 'Elective').length;
+    status = '<span class="pill wait">Required ' + Math.min(req, 6) + ' of 6, electives ' + Math.min(el, 2) + ' of 2</span>';
+  }
+  items.sort((a, b) => (!!b.done - !!a.done) || ((b.type === 'Required') - (a.type === 'Required')) || a.name.localeCompare(b.name));
+  const rows = items.map(it => {
+    const d = it.done;
+    const sub = d ? 'Earned ' + shortDate(d.date) : it.reqs.length + (it.reqs.length === 1 ? ' requirement' : ' requirements') + ' signed off';
+    const pills = (it.type ? '<span class="pill info">' + it.type + '</span>' : '') +
+      (u.isLeader && it.app && !it.app.inScoutbook ? ' <span class="pill wait">Not in Scoutbook</span>' : '') +
+      (u.isLeader && d && d.source === 'Scoutbook' && !d.awarded ? ' <span class="pill wait">Not presented yet</span>' : '');
+    return '<button class="row" data-act="advDetail" data-scout="' + esc(scout) + '" data-group="' + esc(g.key) + '" data-key="' + esc(it.key) + '">' +
+      '<span class="mark ' + (d ? 'done' : 'part') + '" aria-hidden="true">' + (d ? '&#10003;' : it.reqs.length) + '</span>' +
+      '<div class="grow"><div class="t">' + esc(it.name) + '</div><div class="s">' + esc(sub) + '</div>' + (pills ? '<div style="margin-top:4px">' + pills + '</div>' : '') + '</div></button>';
+  }).join('');
+  const rr = g.rankReqs.length ? '<button class="row" data-act="advDetail" data-scout="' + esc(scout) + '" data-group="' + esc(g.key) + '" data-key="__rank">' +
+    '<span class="mark part" aria-hidden="true">' + g.rankReqs.length + '</span><div class="grow"><div class="t">' + esc(g.key) + ' rank requirements</div><div class="s">' +
+    g.rankReqs.length + ' signed off</div></div></button>' : '';
+  return '<details class="rank-group"' + (open ? ' open' : '') + '><summary><span class="rg-title">' + esc(g.key) + '</span>' + status + '</summary>' +
+    '<div class="list">' + (rr + rows || '<div class="none">Nothing recorded yet.</div>') + '</div></details>';
+}
+function advDetailSheet(el) {
+  const g = advTree(el.dataset.scout).find(x => x.key === el.dataset.group); if (!g) return;
+  const reqList = list => list.length ? '<div class="list">' + list.slice().sort(byReq).map(r =>
+      '<div class="row" style="cursor:default"><span class="mark done" aria-hidden="true">&#10003;</span><div class="grow"><div class="t">Requirement ' + esc(r.req) + '</div><div class="s">' +
+      esc(shortDate(r.date)) + (r.approved ? '' : ', waiting for leader approval') + '</div></div></div>').join('') + '</div>'
+    : '<p class="small">Scoutbook didn\'t list individual requirements for this one.</p>';
+  if (el.dataset.key === '__rank') { openSheet('<h2 id="sheet-title">' + esc(g.key) + ' rank requirements</h2><p>' + esc(el.dataset.scout) + '</p>' + reqList(g.rankReqs)); return; }
+  const it = g.items[el.dataset.key]; if (!it) return;
+  const u = U(), d = it.done, a = it.app;
+  openSheet('<h2 id="sheet-title">' + esc(it.name) + '</h2><p>' + esc(el.dataset.scout) + '<br>' + esc([RANKS.includes(g.key) ? g.key : '', it.type].filter(Boolean).join(', ')) + '</p>' +
+    '<p>' + (d ? '<span class="pill ok">Earned ' + esc(shortDate(d.date)) + '</span>' + (d.source === 'Scoutbook' ? (d.awarded ? ' <span class="pill info">Presented</span>' : ' <span class="pill wait">Not presented yet</span>') : '') : '<span class="pill wait">In progress</span>') + '</p>' +
+    (d && d.note ? '<p class="small">' + esc(d.note) + '</p>' : '') +
+    '<h3 style="font-size:17px;margin:16px 0 8px">Requirements signed off</h3>' + reqList(it.reqs) +
+    (u.isLeader && a ? '<div class="quick">' + (a.inScoutbook ? '' : '<button class="btn primary" data-act="sbSet" data-id="' + esc(a.id) + '" data-v="1">Mark entered in Scoutbook</button>') +
+      '<button class="btn danger" data-act="delAdv" data-id="' + esc(a.id) + '">Delete what was logged in the app</button></div>' : ''));
+}
+function fillAdvList(rank) {
+  const dl = $('#advlist'); if (!dl) return;
+  const list = ((D().lists || {}).adventures || []).filter(a => !rank || a.rank === rank);
+  dl.innerHTML = [...new Set(list.map(a => a.name))].sort().map(n => '<option value="' + esc(n) + '">').join('');
+}
+function scoutbookView() {
+  const q = (D().advancement || []).filter(a => !a.inScoutbook).sort((a, b) => a.scout.localeCompare(b.scout) || a.date.localeCompare(b.date));
+  const L = D().links || {};
+  const sb = D().scoutbookImport;
+  let out = '<p style="margin-top:0">These were logged in the app but not entered in Scoutbook yet. Enter them there, tick them off, then tap Mark as entered. Importing a Scoutbook export ticks off matches for you.</p>';
+  if (L.scoutbook) out += '<p><a class="btn" href="' + esc(L.scoutbook) + '" target="_blank" rel="noopener">Open Scoutbook</a></p>';
+  out += '<div class="list" style="margin-bottom:16px"><div class="row" style="cursor:default"><div class="grow"><div class="t">Scoutbook import</div>' +
+    (sb && sb.at ? '<div class="s">Last imported ' + esc(stamp(sb.at)) + (sb.file ? ' from ' + esc(sb.file) : '') + '</div>' : '<div class="s">Nothing imported yet</div>') +
+    (sb && sb.error ? '<p class="err" style="margin:6px 0 0">' + esc(sb.error) + '</p>' : '') +
+    (sb && sb.notOnScoutsTab && sb.notOnScoutsTab.length ? '<div class="s" style="margin-top:6px"><span class="pill wait">Not on Scouts tab</span> ' + esc(sb.notOnScoutsTab.join(', ')) + '</div>' : '') +
+    '<div class="s" style="margin-top:6px">To update: in Scoutbook Plus, Reports, Quick Export, Advancement. Save the file into the Pack 828 App Scoutbook Exports folder in Drive. It shows up here within 15 minutes.</div></div></div></div>';
+  if (!q.length) return out + '<div class="list"><div class="none">All caught up. Everything logged is in Scoutbook.</div></div>';
+  out += '<form data-form="markScoutbook"><div class="list">' + q.map(a => '<label class="row"><input type="checkbox" class="check" name="ids" value="' + esc(a.id) + '"><div class="grow"><div class="t">' + esc(a.scout) + '</div><div class="s">' + esc(a.item) + ', ' + esc(shortDate(a.date)) + '</div></div></label>').join('') +
+    '</div><p><button class="btn primary block" type="submit">Mark as entered in Scoutbook</button></p></form>';
+  return out;
+}
+function advSheet(id) {
+  const a = (D().advancement || []).find(x => x.id === id); if (!a || !U().isLeader) return;
+  openSheet('<h2 id="sheet-title">' + esc(a.item) + '</h2><p>' + esc(a.scout) + (a.rank ? ', ' + esc(a.rank) : '') + '<br>' + esc(shortDate(a.date)) + '</p>' +
+    (a.note ? '<p>' + esc(a.note) + '</p>' : '') +
+    '<div class="quick">' + (a.inScoutbook ? '<button class="btn" data-act="sbSet" data-id="' + esc(a.id) + '" data-v="0">Mark not in Scoutbook</button>'
+      : '<button class="btn primary" data-act="sbSet" data-id="' + esc(a.id) + '" data-v="1">Mark entered in Scoutbook</button>') +
+    '<button class="btn danger" data-act="delAdv" data-id="' + esc(a.id) + '">Delete this entry</button></div>');
+}
+
+/* ---------- Money ---------- */
+function moneyView() {
+  const u = U(), L = D().links || {}, led = D().ledger || {};
+  const editable = u.isFinance && !led.connected;
+  const bals = (D().balances || []).slice().sort((a, b) => a.scout.localeCompare(b.scout));
+  let out = '<section style="margin-top:0"><div class="sec-head"><h2>Scout accounts</h2>' + (editable ? '<button class="link" data-act="editBal">Update a balance</button>' : '') + '</div><div class="list">';
+  const mine = u.isFinance ? bals : (u.scouts || []).map(n => bals.find(b => b.scout.toLowerCase() === n.toLowerCase()) || { scout: n, missing: true });
+  out += mine.length ? mine.map(b => b.missing
+      ? '<div class="row" style="cursor:default"><div class="grow"><div class="t">' + esc(b.scout) + '</div><div class="s">No balance posted yet</div></div></div>'
+      : '<' + (editable ? 'button data-act="editBal" data-scout="' + esc(b.scout) + '"' : 'div style="cursor:default"') + ' class="row bal"><div class="grow"><div class="t">' + esc(b.scout) + '</div><div class="s">As of ' + esc(shortDate(b.asOf)) + (b.note ? ', ' + esc(b.note) : '') + '</div>' + neededLine(b) + '</div>' +
+        '<div class="amt' + (b.balance < 0 ? ' neg' : '') + '">' + money(b.balance) + '</div></' + (editable ? 'button' : 'div') + '>').join('')
+    : '<div class="none">' + (u.isFinance ? (led.connected ? 'No balances synced yet. Tap Sync now.' : 'No balances posted yet. Tap Update a balance to add one.') : 'No scout is linked to your account yet.') + '</div>';
+  out += '</div>';
+  if (mine.some(b => b.stillNeeded != null)) out += '<p class="small" style="margin-top:10px">Still needed is what this year\'s registration, campouts and camp cost beyond what\'s in the account. It\'s paid as each event comes up, never as one bill.</p>';
+  if (u.isFinance && led.connected) out += ledgerStatusHtml(led.status || {});
+  if (L.treasurer) out += '<p class="small" style="margin-top:10px">Questions about a balance? <a href="mailto:' + esc(L.treasurer) + '">Email the treasurer</a>.</p>';
+  out += '</section>';
+  if (!u.isLeader) return out;
+
+  let exps = D().expenses || [];
+  out += '<section><div class="sec-head"><h2>Expenses</h2></div><p style="margin:0 0 12px"><button class="btn primary block" data-act="newExpense">' + ICON.camera + 'Add an expense with receipt</button></p>';
+  if (u.isFinance) {
+    const f = S.expFilter;
+    out += '<div class="seg" role="group" aria-label="Filter expenses">' +
+      [['review', 'Needs review'], ['reimburse', 'To reimburse'], ['all', 'All']].map(([k, l]) => '<button data-act="expFilter" data-f="' + k + '" aria-pressed="' + (f === k) + '">' + l + '</button>').join('') + '</div>';
+    if (f === 'review') exps = exps.filter(e => e.status === 'Submitted');
+    if (f === 'reimburse') exps = exps.filter(e => e.status === 'Approved' && /own money|reimburse/i.test(e.paidWith));
+  }
+  out += '<div class="list">' + (exps.length ? exps.slice(0, 80).map(e =>
+    '<button class="row" data-act="expense" data-id="' + esc(e.id) + '"><div class="grow"><div class="t">' + esc(e.vendor) + '</div><div class="s">' + esc(shortDate(e.date)) + ', ' + esc(e.category) +
+    (u.isFinance && e.by !== u.email ? ', ' + esc(personName(e.by)) : '') + '</div><div style="margin-top:4px">' + statusPill(e) + (e.receipt ? '' : ' <span class="pill bad">No receipt</span>') + '</div></div>' +
+    '<div class="amt sm">' + money(e.amount) + '</div></button>').join('')
+    : '<div class="none">' + (u.isFinance ? 'Nothing waiting here.' : 'You have not submitted any expenses yet.') + '</div>') + '</div></section>';
+
+  if (u.isFinance) {
+    const fy = fiscalStart();
+    const year = (D().expenses || []).filter(e => e.status !== 'Rejected' && e.date && ymd(e.date) >= fy);
+    const total = year.reduce((s, e) => s + e.amount, 0);
+    const byCat = {}; year.forEach(e => { byCat[e.category] = (byCat[e.category] || 0) + e.amount; });
+    const cats = Object.entries(byCat).sort((a, b) => b[1] - a[1]);
+    const max = cats.length ? cats[0][1] : 1;
+    out += '<section><div class="sec-head"><h2>Spending this pack year</h2><div class="amt sm">' + money(total) + '</div></div><div class="list">' +
+      (cats.length ? cats.map(([c, v]) => '<div class="row" style="cursor:default;display:block"><div class="bal"><span>' + esc(c) + '</span><b>' + money(v) + '</b></div><div class="bar"><i style="width:' + Math.max(3, v / max * 100) + '%"></i></div></div>').join('')
+        : '<div class="none">No expenses since ' + esc(fmtDay(fy, { month: 'long', day: 'numeric' })) + '.</div>') + '</div></section>';
+  }
+  return out;
+}
+function neededLine(b) {
+  if (b.stillNeeded == null) return '';
+  if (b.stillNeeded > 0) return '<div class="s" style="margin-top:4px"><span class="pill wait">Still needed this year: ' + money(b.stillNeeded) + '</span></div>';
+  return '<div class="s" style="margin-top:4px"><span class="pill ok">This year is covered' + (b.surplus > 0 ? ', ' + money(b.surplus) + ' carries to next year' : '') + '</span></div>';
+}
+function stamp(iso) { const d = new Date(iso); return fmtTime(d) + ', ' + fmtDay(d); }
+function ledgerStatusHtml(st) {
+  return '<div class="list" style="margin-top:10px"><div class="row" style="cursor:default;align-items:center"><div class="grow">' +
+    '<div class="t">Synced from the Scout Accounts Ledger</div>' +
+    '<div class="s">' + (st.fileUpdated ? 'Ledger last saved ' + esc(stamp(st.fileUpdated)) : 'Not synced yet') + '</div>' +
+    (st.checked ? '<div class="s">Checked ' + esc(stamp(st.checked)) + '</div>' : '') +
+    (st.error ? '<p class="err" style="margin:6px 0 0">' + esc(st.error) + '</p>' : '') +
+    (st.unmatched && st.unmatched.length ? '<div class="s" style="margin-top:6px"><span class="pill wait">No family linked</span> ' + esc(st.unmatched.join(', ')) + '</div>' : '') +
+    (st.missing && st.missing.length ? '<div class="s" style="margin-top:6px"><span class="pill bad">No saved balance</span> ' + esc(st.missing.join(', ')) + '</div>' : '') +
+    '</div><button class="btn small" data-act="syncLedger">Sync now</button></div></div>';
+}
+function statusPill(e) {
+  const m = { Submitted: ['wait', 'Waiting for review'], Approved: ['info', 'Approved'], Reimbursed: ['ok', 'Reimbursed'], Rejected: ['bad', 'Not approved'] }[e.status] || ['info', e.status];
+  return '<span class="pill ' + m[0] + '">' + m[1] + '</span>';
+}
+function personName(email) { const p = (D().people || []).find(x => x.email === email); return p ? (p.name || email) : email; }
+
+function expenseSheet(id) {
+  const e = (D().expenses || []).find(x => x.id === id); if (!e) return;
+  const fin = U().isFinance;
+  openSheet('<h2 id="sheet-title">' + esc(e.vendor) + ', ' + money(e.amount) + '</h2>' +
+    '<p style="margin:0 0 12px">' + esc(shortDate(e.date)) + '<br>' + esc(e.category) + (e.event ? ' for ' + esc(e.event) : '') + '<br>Paid with: ' + esc(e.paidWith) +
+    '<br>Submitted by ' + esc(personName(e.by)) + '</p>' + (e.description ? '<p>' + esc(e.description) + '</p>' : '') +
+    '<p>' + statusPill(e) + (e.treasurerNote ? '<br><span class="small">Treasurer note: ' + esc(e.treasurerNote) + '</span>' : '') + '</p>' +
+    (e.receipt ? '<p><a class="btn" href="' + esc(e.receipt) + '" target="_blank" rel="noopener">View receipt</a></p>' : '<p class="err">No receipt was attached.</p>') +
+    (fin ? '<form data-form="updateExpense" data-id="' + esc(e.id) + '"><label class="f"><span>Note to the leader (optional)</span><input class="in" name="note" value="' + esc(e.treasurerNote) + '"></label>' +
+      '<div class="quick">' + ['Approved', 'Reimbursed', 'Rejected', 'Submitted'].filter(s => s !== e.status).map(s =>
+        '<button class="btn ' + (s === 'Rejected' ? 'danger' : s === 'Approved' || s === 'Reimbursed' ? 'primary' : '') + '" type="submit" name="status" value="' + s + '">' +
+        ({ Approved: 'Approve', Reimbursed: 'Mark reimbursed', Rejected: 'Do not approve', Submitted: 'Move back to review' })[s] + '</button>').join('') + '</div></form>' : ''));
+}
+
+/* ---------- More ---------- */
+function moreView() {
+  const u = U(), L = D().links || {};
+  const links = [
+    [L.signin, 'Meeting sign-in', 'Check your scout in at meetings and events'],
+    [L.chatFamilies, 'Pack chat', 'The families Google Chat space'],
+    [u.isLeader ? L.chatLeaders : '', 'Leader chat', 'The leaders Google Chat space'],
+    [L.scoutbook, 'Scoutbook', 'Official advancement records'],
+    [L.website, 'Pack website', 'pack828sc.org'],
+    [L.treasurer ? 'mailto:' + L.treasurer : '', 'Email the treasurer', L.treasurer],
+    [L.cubmaster ? 'mailto:' + L.cubmaster : '', 'Email the Cubmaster', L.cubmaster]
+  ].filter(x => x[0]);
+  const roleName = { admin: 'Cubmaster / admin', treasurer: 'Treasurer', leader: 'Leader', parent: 'Family' }[u.role] || u.role;
+  return '<section style="margin-top:0"><div class="list">' + links.map(([href, t, s]) =>
+      '<a class="row" style="text-decoration:none;color:inherit" href="' + esc(href) + '" target="_blank" rel="noopener"><div class="grow"><div class="t">' + esc(t) + '</div><div class="s">' + esc(s) + '</div></div></a>').join('') + '</div></section>' +
+    '<section><div class="sec-head"><h2>Lists</h2></div><div class="list">' +
+      '<button class="row" data-act="sub" data-sub="announcements"><div class="grow"><div class="t">All announcements</div></div></button>' +
+      '<button class="row" data-act="sub" data-sub="todos"><div class="grow"><div class="t">Full to-do list</div></div></button></div></section>' +
+    '<section><div class="sec-head"><h2>Your account</h2></div><div class="list"><div class="row" style="cursor:default"><div class="grow"><div class="t">' + esc(u.name || u.email) + '</div>' +
+      '<div class="s">' + esc(u.email) + '</div><div class="s">' + esc(roleName) + ((u.scouts || []).length ? ', linked to ' + esc(u.scouts.join(', ')) : '') + '</div></div></div></div>' +
+      (S.installEvt ? '<p><button class="btn block" data-act="install">Install the app on this phone</button></p>' : '') +
+      (isIOS && !isStandalone() ? '<p class="small">To install on iPhone: tap Share, then Add to Home Screen. You\'ll sign in once more inside the installed app.</p>' : '') +
+      '<p><button class="btn danger block" data-act="signOut">Sign out</button></p>' +
+      '<p class="small">Last updated ' + (S.lastSync ? fmtTime(new Date(S.lastSync)) + ', ' + fmtDay(new Date(S.lastSync)) : 'never') + '. Version ' + APP_VERSION + '.</p></section>';
+}
+
+/* ---------- Bottom sheet + forms ---------- */
+function openSheet(html) {
+  $('#sheet-body').innerHTML = html;
+  $('#scrim').classList.add('open'); $('#sheet').classList.add('open');
+  const f = $('#sheet-body').querySelector('input:not([type=checkbox]):not([type=file]),textarea');
+  if (f && !f.value && !$('#sheet-body').querySelector('[type=file]')) setTimeout(() => f.focus(), 250);
+}
+function closeSheet() { $('#scrim').classList.remove('open'); $('#sheet').classList.remove('open'); }
+
+function newAnnouncementSheet() {
+  const L = D().links || {};
+  openSheet('<h2 id="sheet-title">Post an announcement</h2><form data-form="postAnnouncement">' +
+    '<label class="f"><span>Title</span><input class="in" name="title" maxlength="120" required></label>' +
+    '<label class="f"><span>Message</span><textarea class="in" name="body" maxlength="4000"></textarea></label>' +
+    '<div class="two"><label class="f"><span>Who sees it</span><select class="in" name="audience"><option value="Everyone">Everyone</option><option value="Leaders">Leaders only</option></select></label>' +
+    '<label class="f"><span>Hide after (optional)</span><input class="in" type="date" name="expires"></label></div>' +
+    '<label class="toggle"><input type="checkbox" class="check" name="pinned"> Pin to the top</label>' +
+    (L.chatWebhookFamilies || L.chatWebhookLeaders ? '<label class="toggle"><input type="checkbox" class="check" name="toChat" checked> Also post it in Google Chat</label>' : '') +
+    '<p class="err" hidden></p><button class="btn primary block" type="submit">Post announcement</button></form>');
+}
+function newTodoSheet() {
+  const u = U(), people = (D().people || []).filter(p => p.email !== u.email).sort((a, b) => (a.name || a.email).localeCompare(b.name || b.email));
+  openSheet('<h2 id="sheet-title">Add a to-do</h2><form data-form="addTodo">' +
+    '<label class="f"><span>Task</span><input class="in" name="task" maxlength="300" required></label>' +
+    (u.isLeader ? '<label class="f"><span>Who it is for</span><select class="in" name="assignedTo"><option value="' + esc(u.email) + '">Me</option>' +
+      '<option value="Leaders">All leaders</option><option value="Families">All families</option><option value="Everyone">Everyone</option>' +
+      people.map(p => '<option value="' + esc(p.email) + '">' + esc(p.name || p.email) + '</option>').join('') + '</select></label>' : '') +
+    '<label class="f"><span>Due (optional)</span><input class="in" type="date" name="due"></label>' +
+    '<p class="err" hidden></p><button class="btn primary block" type="submit">Add to-do</button></form>');
+}
+function newAdvSheet() {
+  const scouts = (D().scouts || []).slice(), ranks = (D().lists || {}).ranks || [];
+  const groups = {}; scouts.forEach(s => { (groups[s.rank || 'No rank set'] = groups[s.rank || 'No rank set'] || []).push(s); });
+  const order = ranks.concat(Object.keys(groups).filter(k => !ranks.includes(k)));
+  const known = new Set(((D().lists || {}).adventures || []).map(a => a.name));
+  openSheet('<h2 id="sheet-title">Log an adventure</h2><form data-form="logAdvancement">' +
+    '<span style="display:block;font-size:14px;font-weight:600;margin-bottom:4px">Scouts who finished it</span><div class="picklist">' +
+    order.filter(r => groups[r]).map(r => '<div class="grp">' + esc(r) + '</div>' + groups[r].map(s => '<label><input type="checkbox" class="check" name="scouts" value="' + esc(s.name) + '" data-rank="' + esc(s.rank) + '"> ' + esc(s.name) + '</label>').join('')).join('') + '</div>' +
+    '<label class="f"><span>Rank</span><select class="in" name="rank"><option value="">Pick a rank</option>' + ranks.map(r => '<option>' + esc(r) + '</option>').join('') + '</select></label>' +
+    '<label class="f"><span>Adventure or award</span><input class="in" name="item" list="advlist" maxlength="150" required></label><datalist id="advlist">' + [...known].sort().map(n => '<option value="' + esc(n) + '">').join('') + '</datalist>' +
+    '<div class="two"><label class="f"><span>Date finished</span><input class="in" type="date" name="date" value="' + todayStr() + '" required></label>' +
+    '<label class="f"><span>Note (optional)</span><input class="in" name="note" maxlength="300"></label></div>' +
+    '<p class="err" hidden></p><button class="btn primary block" type="submit">Log it</button></form>');
+}
+function balanceSheet(scout) {
+  const scouts = (D().scouts || []).map(s => s.name), b = (D().balances || []).find(x => x.scout === scout);
+  openSheet('<h2 id="sheet-title">Update a scout account</h2><form data-form="setBalance">' +
+    '<label class="f"><span>Scout</span><select class="in" name="scout">' + [...new Set(scouts.concat((D().balances || []).map(x => x.scout)))].sort().map(n => '<option' + (n === scout ? ' selected' : '') + '>' + esc(n) + '</option>').join('') + '</select></label>' +
+    '<label class="f"><span>Current balance</span><input class="in" name="balance" inputmode="decimal" required value="' + (b ? b.balance.toFixed(2) : '') + '"></label>' +
+    '<p class="hint">Use the balance from the Scout Accounts Ledger. Families see this number and today\'s date.</p>' +
+    '<label class="f"><span>Note families will see (optional)</span><input class="in" name="note" maxlength="300" value="' + esc(b ? b.note : '') + '"></label>' +
+    '<p class="err" hidden></p><button class="btn primary block" type="submit">Save balance</button></form>');
+}
+function newExpenseSheet() {
+  const lists = D().lists || {};
+  const evNames = [...new Set((D().events || []).map(e => e.title))];
+  openSheet('<h2 id="sheet-title">Add an expense</h2><form data-form="submitExpense">' +
+    '<label class="btn block" style="margin-bottom:14px">' + ICON.camera + '<span id="rcpt-label">Add a receipt photo</span><input class="sr" type="file" name="receipt" accept="image/*,application/pdf" data-act="receiptPick"></label><img class="thumb" id="thumb" alt="Receipt preview" hidden>' +
+    '<div class="two"><label class="f"><span>Amount</span><input class="in" name="amount" inputmode="decimal" placeholder="0.00" required></label>' +
+    '<label class="f"><span>Date</span><input class="in" type="date" name="date" value="' + todayStr() + '" required></label></div>' +
+    '<label class="f"><span>Store or vendor</span><input class="in" name="vendor" maxlength="120" required></label>' +
+    '<label class="f"><span>Category</span><select class="in" name="category">' + (lists.categories || []).map(c => '<option>' + esc(c) + '</option>').join('') + '</select></label>' +
+    '<label class="f"><span>For which event (optional)</span><input class="in" name="event" list="evlist" maxlength="120"></label><datalist id="evlist">' + evNames.map(n => '<option value="' + esc(n) + '">').join('') + '</datalist>' +
+    '<label class="f"><span>How it was paid</span><select class="in" name="paidWith">' + (lists.paidWith || []).map(c => '<option>' + esc(c) + '</option>').join('') + '</select></label>' +
+    '<label class="f"><span>What it was for (optional)</span><input class="in" name="description" maxlength="1000"></label>' +
+    '<p class="err" hidden></p><button class="btn primary block" type="submit">Submit expense</button></form>');
+}
+
+/* Shrink phone photos before upload so they send fast on weak signal */
+async function fileToPayload(file) {
+  if (!file) return null;
+  if (file.type.startsWith('image/')) {
+    try {
+      const bmp = await createImageBitmap(file);
+      const scale = Math.min(1, 1800 / Math.max(bmp.width, bmp.height));
+      const c = document.createElement('canvas');
+      c.width = Math.round(bmp.width * scale); c.height = Math.round(bmp.height * scale);
+      c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
+      const blob = await new Promise(r => c.toBlob(r, 'image/jpeg', 0.75));
+      return { mime: 'image/jpeg', data: await toB64(blob) };
+    } catch (e) { /* fall through to raw upload */ }
+  }
+  if (file.size > 10 * 1024 * 1024) throw new Error('That file is over 10 MB. Take a photo instead.');
+  return { mime: file.type || 'application/octet-stream', data: await toB64(file) };
+}
+function toB64(blob) {
+  return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(',')[1]); r.onerror = () => rej(new Error('Could not read that file.')); r.readAsDataURL(blob); });
+}
+
+/* ---------- Sign in with Google ---------- */
+function mountGoogle() {
+  const box = $('#gbtn'); if (!box || !googleOn()) return;
+  if (window.google && google.accounts && google.accounts.id) {
+    if (!mountGoogle.ready) {
+      google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: onGoogleCredential, ux_mode: 'popup', cancel_on_tap_outside: true });
+      mountGoogle.ready = true;
+    }
+    google.accounts.id.renderButton(box, { theme: 'filled_blue', size: 'large', shape: 'pill', text: 'signin_with', logo_alignment: 'left', width: Math.min(360, box.clientWidth || 320) });
+    return;
+  }
+  if (mountGoogle.loading) return;
+  mountGoogle.loading = true;
+  const sc = document.createElement('script');
+  sc.src = 'https://accounts.google.com/gsi/client'; sc.async = true;
+  sc.onload = () => mountGoogle();
+  sc.onerror = () => { mountGoogle.loading = false; const m = $('#msg'); if (m) m.textContent = 'Google sign-in could not load. Use an email code instead.'; };
+  document.head.appendChild(sc);
+}
+async function onGoogleCredential(resp) {
+  const m = $('#msg'); if (m) m.textContent = 'Signing in...';
+  try {
+    const r = await api('googleSignIn', { credential: resp.credential });
+    S.token = r.token; localStorage.setItem('p828.token', r.token);
+    S.tab = 'home'; render(); await refresh(false);
+  } catch (e) { if (m) m.textContent = e.message; }
+}
+
+/* ---------- Actions ---------- */
+const actions = {
+  tab: el => { S.tab = el.dataset.tab; S.sub = null; render(); window.scrollTo(0, 0); },
+  sub: el => { S.sub = el.dataset.sub; render(); window.scrollTo(0, 0); },
+  back: () => { S.sub = null; render(); },
+  refresh: () => refresh(false),
+  closeSheet,
+  event: el => eventSheet(el.dataset.id),
+  newAnnouncement: newAnnouncementSheet,
+  newTodo: newTodoSheet,
+  newAdv: newAdvSheet,
+  newExpense: newExpenseSheet,
+  editBal: el => balanceSheet(el.dataset.scout || ''),
+  expense: el => expenseSheet(el.dataset.id),
+  advItem: el => advSheet(el.dataset.id),
+  advDetail: el => advDetailSheet(el),
+  expFilter: el => { S.expFilter = el.dataset.f; render(); },
+  syncLedger: async el => {
+    el.disabled = true; el.textContent = 'Syncing...';
+    try { const r = await api('syncLedger'); toast('Synced ' + r.status.count + ' balances from the ledger'); await refresh(true); }
+    catch (e) { toast(e.message); el.disabled = false; el.textContent = 'Sync now'; }
+  },
+  loginBack: () => { S.loginStep = 'email'; render(); },
+  iosHint: () => { localStorage.setItem('p828.iosHint', '1'); render(); },
+  install: async () => { if (!S.installEvt) return; S.installEvt.prompt(); await S.installEvt.userChoice; S.installEvt = null; render(); },
+  signOut: async () => { if (!confirm('Sign out of Pack 828 on this phone?')) return; try { await api('signOut'); } catch (e) {} signOutLocal(); },
+  delAnnouncement: async el => { if (!confirm('Remove this announcement for everyone?')) return; await run(() => api('deleteAnnouncement', { id: el.dataset.id }), 'Announcement removed'); },
+  delTodo: async el => { if (!confirm('Delete this to-do?')) return; await run(() => api('deleteTodo', { id: el.dataset.id }), 'To-do deleted'); },
+  delAdv: async el => { if (!confirm('Delete this entry?')) return; closeSheet(); await run(() => api('deleteAdvancement', { id: el.dataset.id }), 'Entry deleted'); },
+  sbSet: async el => { closeSheet(); await run(() => api('markScoutbook', { ids: [el.dataset.id], value: el.dataset.v === '1' }), el.dataset.v === '1' ? 'Marked entered in Scoutbook' : 'Moved back to the Scoutbook to-do'); }
+};
+async function run(fn, okMsg) {
+  try { await fn(); toast(okMsg); await refresh(true); } catch (e) { toast(e.message); }
+}
+
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-act]');
+  if (!el || el.tagName === 'SELECT' || (el.tagName === 'INPUT' && el.type !== 'button')) return;
+  if (actions[el.dataset.act]) { e.preventDefault(); actions[el.dataset.act](el, e); }
+});
+
+document.addEventListener('change', async e => {
+  const el = e.target;
+  if (el.name === 'scouts' && el.checked && el.dataset.rank && el.form && el.form.rank && !el.form.rank.value) { el.form.rank.value = el.dataset.rank; fillAdvList(el.dataset.rank); }
+  if (el.name === 'rank' && el.form && el.form.dataset.form === 'logAdvancement') fillAdvList(el.value);
+  if (el.dataset.act === 'pickScout') { S.scout = el.value; localStorage.setItem('p828.scout', S.scout); render(); }
+  if (el.dataset.act === 'receiptPick') {
+    const f = el.files[0], img = $('#thumb');
+    if (f && f.type.startsWith('image/')) { img.src = URL.createObjectURL(f); img.hidden = false; } else img.hidden = true;
+    $('#rcpt-label').textContent = f ? (f.type.startsWith('image/') ? 'Change the receipt photo' : 'Attached: ' + f.name) : 'Add a receipt photo';
+  }
+  if (el.dataset.act === 'toggleTodo') {
+    const t = (D().todos || []).find(x => x.id === el.dataset.id); if (!t) return;
+    t.done = el.checked; render();
+    try { await api('setTodo', { id: t.id, done: t.done }); toast(t.done ? 'Done' : 'Reopened'); refresh(true); }
+    catch (err) { t.done = !t.done; render(); toast(err.message); }
+  }
+});
+
+document.addEventListener('submit', async e => {
+  const form = e.target, kind = form.dataset.form; if (!kind) return;
+  e.preventDefault();
+  const fd = new FormData(form), btn = e.submitter || form.querySelector('[type=submit]'), err = form.querySelector('.err'), msg = $('#msg');
+  const val = k => String(fd.get(k) || '').trim();
+  const label = btn ? btn.textContent : '';
+  if (btn) { btn.disabled = true; btn.textContent = 'Working...'; }
+  if (err) err.hidden = true;
+  try {
+    if (kind === 'requestCode') {
+      S.loginEmail = val('email').toLowerCase();
+      await api('requestCode', { email: S.loginEmail });
+      S.loginStep = 'code'; render(); return;
+    }
+    if (kind === 'verifyCode') {
+      const r = await api('verifyCode', { email: S.loginEmail, code: val('code') });
+      S.token = r.token; localStorage.setItem('p828.token', r.token);
+      S.tab = 'home'; render(); await refresh(false); return;
+    }
+    if (kind === 'postAnnouncement') {
+      const r = await api('postAnnouncement', { title: val('title'), body: val('body'), audience: val('audience'), expires: val('expires'), pinned: !!fd.get('pinned'), toChat: !!fd.get('toChat') });
+      closeSheet(); toast(fd.get('toChat') && !r.chatSent ? 'Posted in the app. Google Chat did not accept it; check the webhook.' : 'Announcement posted');
+    }
+    if (kind === 'addTodo') { await api('addTodo', { task: val('task'), assignedTo: val('assignedTo') || U().email, due: val('due') }); closeSheet(); toast('To-do added'); }
+    if (kind === 'logAdvancement') {
+      const scouts = fd.getAll('scouts'); if (!scouts.length) throw new Error('Pick at least one scout.');
+      const r = await api('logAdvancement', { scouts, rank: val('rank'), item: val('item'), date: val('date'), note: val('note') });
+      closeSheet(); toast('Logged for ' + r.count + (r.count === 1 ? ' scout' : ' scouts'));
+    }
+    if (kind === 'setBalance') {
+      const n = Number(val('balance').replace(/[$,\s]/g, '')); if (isNaN(n)) throw new Error('Enter the balance as a number, like 125.50');
+      await api('setBalance', { scout: val('scout'), balance: n, note: val('note') }); closeSheet(); toast('Balance saved');
+    }
+    if (kind === 'submitExpense') {
+      const amount = Number(val('amount').replace(/[$,\s]/g, '')); if (!(amount > 0)) throw new Error('Enter the amount spent, like 24.99');
+      const file = form.querySelector('[name=receipt]').files[0];
+      if (!file && !confirm('No receipt photo attached. Submit anyway?')) throw new Error('Add a photo of the receipt.');
+      if (btn) btn.textContent = file ? 'Uploading receipt...' : 'Working...';
+      const receipt = await fileToPayload(file);
+      await api('submitExpense', { amount, date: val('date'), vendor: val('vendor'), category: val('category'), event: val('event'), paidWith: val('paidWith'), description: val('description'), receipt });
+      closeSheet(); toast('Expense submitted to the treasurer');
+    }
+    if (kind === 'updateExpense') {
+      const status = btn ? btn.value : '';
+      await api('updateExpense', { id: form.dataset.id, status, note: val('note') }); closeSheet(); toast('Expense updated');
+    }
+    if (kind === 'markScoutbook') {
+      const ids = fd.getAll('ids'); if (!ids.length) throw new Error('Tick the ones you entered in Scoutbook first.');
+      await api('markScoutbook', { ids, value: true }); toast(ids.length + ' marked entered in Scoutbook');
+    }
+    await refresh(true);
+  } catch (ex) {
+    if (err) { err.textContent = ex.message; err.hidden = false; }
+    else if (msg) msg.textContent = ex.message;
+    else toast(ex.message);
+  } finally {
+    if (btn && document.body.contains(btn)) { btn.disabled = false; btn.textContent = label; }
+  }
+});
+
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); S.installEvt = e; if (S.token && S.data) render(); });
+document.addEventListener('visibilitychange', () => { if (!document.hidden && S.token && Date.now() - S.lastSync > 5 * 60 * 1000) refresh(true); });
+window.addEventListener('online', () => refresh(true));
+if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+
+render();
+if (S.token) refresh(!!S.data);
+</script>
+</body>
+</html>
