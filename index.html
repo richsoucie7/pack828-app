@@ -234,7 +234,7 @@ textarea.in{min-height:110px;resize:vertical}
 <script>
 /* ===== Paste the Apps Script web app URL (ends in /exec) here ===== */
 const API_URL = 'https://script.google.com/macros/s/AKfycbxt6d8Vl0sCa9zgg9MFU4XHWBNr6vsfiB_lAnYaKzbYrUzRZCfvQGtVsIS222Mi5QmC/exec';
-const APP_VERSION = '1.6.0';
+const APP_VERSION = '1.6.1';
 /* Optional: paste the OAuth Web client ID to turn on "Sign in with Google" (see SETUP.md) */
 const GOOGLE_CLIENT_ID = '254734641252-lap60rn8kjltr0eh4q7mrd8lvml9bphd.apps.googleusercontent.com';
 const googleOn = () => GOOGLE_CLIENT_ID.indexOf('PASTE_') !== 0;
@@ -410,8 +410,8 @@ function homeView() {
     : '<div class="empty-sign">Nothing on the pack calendar yet. Check back soon.</div>';
   out += '<div class="quick">' +
     (L.signin ? '<a class="btn primary" href="' + esc(L.signin) + '" target="_blank" rel="noopener">Sign in at the meeting</a>' : '') +
-    (L.chatFamilies ? '<a class="btn" href="' + esc(L.chatFamilies) + '" target="_blank" rel="noopener">Pack chat</a>' : '') +
-    (u.isLeader && L.chatLeaders ? '<a class="btn" href="' + esc(L.chatLeaders) + '" target="_blank" rel="noopener">Leader chat</a>' : '') +
+    (L.chatFamilies ? '<a class="btn" ' + linkAttrs(chatLink(L.chatFamilies)) + '>Pack chat</a>' : '') +
+    (u.isLeader && L.chatLeaders ? '<a class="btn" ' + linkAttrs(chatLink(L.chatLeaders)) + '>Leader chat</a>' : '') +
     '</div>';
   if (S.installEvt) out += '<p class="banner">Put Pack 828 on your home screen. <button class="link" data-act="install">Install the app</button></p>';
   else if (isIOS && !isStandalone() && !localStorage.getItem('p828.iosHint')) out += '<p class="banner">Put Pack 828 on your Home Screen: tap Share, then Add to Home Screen. <button class="link" data-act="iosHint">Got it</button></p>';
@@ -722,12 +722,26 @@ function expenseSheet(id) {
 }
 
 /* ---------- More ---------- */
+/* Google Chat only runs in its app on phones, and Chrome won't hand a plain chat.google.com link to it,
+   so on Android the space opens through an app link to the Chat app (falling back to the web link). */
+function chatLink(url) {
+  const m = String(url || '').match(/chat\.google\.com\/(?:u\/\d+\/)?(?:app\/chat|app\/space|room|space)\/([A-Za-z0-9_-]+)/);
+  if (!m) return url;
+  const room = 'https://chat.google.com/room/' + m[1];
+  if (/android/i.test(navigator.userAgent)) {
+    return 'intent://chat.google.com/room/' + m[1] + '#Intent;scheme=https;package=com.google.android.apps.dynamite;S.browser_fallback_url=' + encodeURIComponent(room) + ';end';
+  }
+  return room;
+}
+function linkAttrs(href) {
+  return 'href="' + esc(href) + '"' + (/^(intent:|mailto:)/.test(href) ? '' : ' target="_blank" rel="noopener"');
+}
 function moreView() {
   const u = U(), L = D().links || {};
   const links = [
     [L.signin, 'Meeting sign-in', 'Check your scout in at meetings and events'],
-    [L.chatFamilies, 'Pack chat', 'The families Google Chat space'],
-    [u.isLeader ? L.chatLeaders : '', 'Leader chat', 'The leaders Google Chat space'],
+    [L.chatFamilies ? chatLink(L.chatFamilies) : '', 'Pack chat', 'Opens the families space in the Google Chat app'],
+    [u.isLeader && L.chatLeaders ? chatLink(L.chatLeaders) : '', 'Leader chat', 'Opens the leaders space in the Google Chat app'],
     [L.scoutbook, 'Scoutbook', 'Official advancement records'],
     [L.website, 'Pack website', 'pack828sc.org'],
     [L.treasurer ? 'mailto:' + L.treasurer : '', 'Email the treasurer', L.treasurer],
@@ -735,7 +749,7 @@ function moreView() {
   ].filter(x => x[0]);
   const roleName = { admin: 'Cubmaster / admin', treasurer: 'Treasurer', leader: 'Leader', parent: 'Family' }[u.role] || u.role;
   return '<section style="margin-top:0"><div class="list">' + links.map(([href, t, s]) =>
-      '<a class="row" style="text-decoration:none;color:inherit" href="' + esc(href) + '" target="_blank" rel="noopener"><div class="grow"><div class="t">' + esc(t) + '</div><div class="s">' + esc(s) + '</div></div></a>').join('') + '</div></section>' +
+      '<a class="row" style="text-decoration:none;color:inherit" ' + linkAttrs(href) + '><div class="grow"><div class="t">' + esc(t) + '</div><div class="s">' + esc(s) + '</div></div></a>').join('') + '</div></section>' +
     '<section><div class="sec-head"><h2>Lists</h2></div><div class="list">' +
       '<button class="row" data-act="sub" data-sub="announcements"><div class="grow"><div class="t">All announcements</div></div></button>' +
       '<button class="row" data-act="sub" data-sub="todos"><div class="grow"><div class="t">Full to-do list</div></div></button></div></section>' +
