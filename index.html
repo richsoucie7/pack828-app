@@ -220,9 +220,9 @@ textarea.in{min-height:110px;resize:vertical}
 <script>
 /* ===== Paste the Apps Script web app URL (ends in /exec) here ===== */
 const API_URL = 'https://script.google.com/macros/s/AKfycbxt6d8Vl0sCa9zgg9MFU4XHWBNr6vsfiB_lAnYaKzbYrUzRZCfvQGtVsIS222Mi5QmC/exec';
-const APP_VERSION = '1.5.0';
+const APP_VERSION = '1.5.1';
 /* Optional: paste the OAuth Web client ID to turn on "Sign in with Google" (see SETUP.md) */
-const GOOGLE_CLIENT_ID = 'PASTE_GOOGLE_CLIENT_ID_HERE';
+const GOOGLE_CLIENT_ID = '254734641252-lap60rn8kjltr0eh4q7mrd8lvml9bphd.apps.googleusercontent.com';
 const googleOn = () => GOOGLE_CLIENT_ID.indexOf('PASTE_') !== 0;
 const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 const isStandalone = () => window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
@@ -379,7 +379,8 @@ function loginView() {
       : '<form data-form="verifyCode"><label class="f"><span>Enter the 6-digit code sent to ' + esc(S.loginEmail) + '</span>' +
         '<input class="in code-in" name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" required></label>' +
         '<button class="btn primary" type="submit">Sign in</button><p class="msg" id="msg">If your email is on the pack roster, the code is on its way. Check spam too.</p>' +
-        '<button class="link" type="button" data-act="loginBack">Use a different email</button></form>') + '</div>';
+        '<button class="link" type="button" data-act="loginBack">Use a different email</button></form>') +
+    '<p class="msg" style="opacity:.8;font-size:13px"><a href="privacy.html" style="color:#fff">Privacy notice</a></p></div>';
 }
 
 /* ---------- Home ---------- */
@@ -711,6 +712,7 @@ function moreView() {
       (S.installEvt ? '<p><button class="btn block" data-act="install">Install the app on this phone</button></p>' : '') +
       (isIOS && !isStandalone() ? '<p class="small">To install on iPhone: tap Share, then Add to Home Screen. You\'ll sign in once more inside the installed app.</p>' : '') +
       '<p><button class="btn danger block" data-act="signOut">Sign out</button></p>' +
+      '<p class="small"><a href="privacy.html">Privacy notice</a></p>' +
       '<p class="small">Last updated ' + (S.lastSync ? fmtTime(new Date(S.lastSync)) + ', ' + fmtDay(new Date(S.lastSync)) : 'never') + '. Version ' + APP_VERSION + '.</p></section>';
 }
 
