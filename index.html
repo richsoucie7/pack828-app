@@ -167,6 +167,20 @@ select.picker{width:100%;padding:12px;border-radius:10px;border:1px solid var(--
 .sheet{position:fixed;left:0;right:0;bottom:0;z-index:41;max-height:92vh;overflow:auto;background:var(--surface);
   border-radius:18px 18px 0 0;padding:8px 0 calc(20px + env(safe-area-inset-bottom));transform:translateY(100%);visibility:hidden;transition:transform .22s ease, visibility 0s linear .22s}
 .sheet.open{transform:none;visibility:visible;transition:transform .22s ease}
+.sheet{overscroll-behavior:contain;-webkit-overflow-scrolling:touch;max-height:92dvh}
+body.locked{position:fixed;left:0;right:0;overflow:hidden}
+.lbl{display:block;font-size:14px;font-weight:600;margin-bottom:6px}
+.lbl-row{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:6px}
+.chip{position:relative}
+.chip input{position:absolute;opacity:0;width:1px;height:1px}
+.chip span{display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;padding:0 14px;border-radius:22px;
+  border:1.5px solid var(--line);background:var(--paper);font-weight:600;cursor:pointer;user-select:none}
+.chip input:checked + span{background:var(--navy);border-color:var(--navy);color:#fff}
+.chip input:focus-visible + span{outline:3px solid var(--gold);outline-offset:2px}
+.chip input:disabled + span{background:var(--green-soft);border-color:transparent;color:var(--green);cursor:default}
+.chip.name span{min-width:0}
+.field{margin:0 0 18px}
 .scrim.open{display:block}
 .grab{width:40px;height:5px;border-radius:3px;background:var(--line);margin:4px auto 10px}
 .sheet h2{font-size:21px;margin-bottom:12px}
@@ -220,7 +234,7 @@ textarea.in{min-height:110px;resize:vertical}
 <script>
 /* ===== Paste the Apps Script web app URL (ends in /exec) here ===== */
 const API_URL = 'https://script.google.com/macros/s/AKfycbxt6d8Vl0sCa9zgg9MFU4XHWBNr6vsfiB_lAnYaKzbYrUzRZCfvQGtVsIS222Mi5QmC/exec';
-const APP_VERSION = '1.5.1';
+const APP_VERSION = '1.6.0';
 /* Optional: paste the OAuth Web client ID to turn on "Sign in with Google" (see SETUP.md) */
 const GOOGLE_CLIENT_ID = '254734641252-lap60rn8kjltr0eh4q7mrd8lvml9bphd.apps.googleusercontent.com';
 const googleOn = () => GOOGLE_CLIENT_ID.indexOf('PASTE_') !== 0;
@@ -348,7 +362,7 @@ function renderTop() {
 
 function renderNav() {
   const tabs = [['home', 'Home', ICON.home], ['calendar', 'Calendar', ICON.cal], ['scouts', 'Scouts', ICON.scout], ['money', 'Money', ICON.money], ['more', 'More', ICON.more]];
-  const queue = U().isLeader ? (D().advancement || []).filter(a => !a.inScoutbook).length : 0;
+  const queue = U().isLeader ? sbQueue().length : 0;
   const review = U().isFinance ? (D().expenses || []).filter(e => e.status === 'Submitted').length : 0;
   $('#navbar').innerHTML = tabs.map(([k, label, ic]) => {
     const badge = k === 'scouts' && queue ? '<span class="dot">' + queue + '</span>' : (k === 'money' && review ? '<span class="dot">' + review + '</span>' : '');
@@ -490,9 +504,9 @@ function scoutsView() {
   if (!scouts.length) return '<p class="none">No scouts are linked to your account yet. Ask the Cubmaster to link your scout.</p>';
   if (!scouts.find(s => s.name === S.scout)) S.scout = (scouts.find(s => (u.scouts || []).includes(s.name)) || scouts[0]).name;
   const sc = scouts.find(s => s.name === S.scout);
-  const queue = (D().advancement || []).filter(a => !a.inScoutbook);
+  const queue = sbQueue();
   let out = '';
-  if (u.isLeader) out += '<div class="quick" style="margin-top:0"><button class="btn primary" data-act="newAdv">Log an adventure</button>' +
+  if (u.isLeader) out += '<div class="quick" style="margin-top:0"><button class="btn primary" data-act="newAdv">Log den progress</button>' +
     '<button class="btn" data-act="sub" data-sub="scoutbook">Scoutbook to-do' + (queue.length ? ' (' + queue.length + ')' : '') + '</button></div>';
   if (scouts.length > 1) out += '<label class="f" style="margin-top:12px"><span>Scout</span><select class="picker" data-act="pickScout">' +
     scouts.map(s => '<option' + (s.name === S.scout ? ' selected' : '') + '>' + esc(s.name) + '</option>').join('') + '</select></label>';
@@ -529,9 +543,15 @@ function advTree(name) {
     if (a.source === 'Scoutbook' || !it.done) it.done = a;
     if (a.source !== 'Scoutbook') it.app = a;
   });
+  const sbHave = new Set();
   (D().requirements || []).filter(r => r.scout === name).forEach(r => {
+    sbHave.add(r.rank + '|' + ik(r.item) + '|' + String(r.req).trim().toLowerCase());
     if (r.kind === 'Rank') { G(r.rank).rankReqs.push(r); return; }
     I(r.kind === 'Award' ? 'Awards' : (r.rank || 'Other'), r.item).reqs.push(r);
+  });
+  (D().denLog || []).filter(r => r.scout === name).forEach(r => {
+    if (sbHave.has(r.rank + '|' + ik(r.item) + '|' + String(r.req).trim().toLowerCase())) return;
+    I(r.rank || 'Other', r.item).reqs.push(Object.assign({ den: true, approved: true }, r));
   });
   return RANKS.filter(r => groups[r]).concat(['Awards', 'Other'].filter(k => groups[k])).map(k => groups[k]);
 }
@@ -564,7 +584,10 @@ function advDetailSheet(el) {
   const g = advTree(el.dataset.scout).find(x => x.key === el.dataset.group); if (!g) return;
   const reqList = list => list.length ? '<div class="list">' + list.slice().sort(byReq).map(r =>
       '<div class="row" style="cursor:default"><span class="mark done" aria-hidden="true">&#10003;</span><div class="grow"><div class="t">Requirement ' + esc(r.req) + '</div><div class="s">' +
-      esc(shortDate(r.date)) + (r.approved ? '' : ', waiting for leader approval') + '</div></div></div>').join('') + '</div>'
+      esc(shortDate(r.date)) + (r.approved ? '' : ', waiting for leader approval') + (r.den ? ', logged in the app' + (r.by ? ' by ' + esc(r.by) : '') : '') + '</div>' +
+      (r.den && U().isLeader ? '<div style="margin-top:4px">' + (r.inScoutbook ? '<span class="pill ok">Entered in Scoutbook</span>' : '<span class="pill wait">Not in Scoutbook yet</span>') +
+        ' <button class="link" style="color:var(--red);font-size:14px;padding:0 0 0 8px" data-act="delDen" data-id="' + esc(r.id) + '">Remove</button></div>' : '') +
+      '</div></div>').join('') + '</div>'
     : '<p class="small">Scoutbook didn\'t list individual requirements for this one.</p>';
   if (el.dataset.key === '__rank') { openSheet('<h2 id="sheet-title">' + esc(g.key) + ' rank requirements</h2><p>' + esc(el.dataset.scout) + '</p>' + reqList(g.rankReqs)); return; }
   const it = g.items[el.dataset.key]; if (!it) return;
@@ -576,13 +599,8 @@ function advDetailSheet(el) {
     (u.isLeader && a ? '<div class="quick">' + (a.inScoutbook ? '' : '<button class="btn primary" data-act="sbSet" data-id="' + esc(a.id) + '" data-v="1">Mark entered in Scoutbook</button>') +
       '<button class="btn danger" data-act="delAdv" data-id="' + esc(a.id) + '">Delete what was logged in the app</button></div>' : ''));
 }
-function fillAdvList(rank) {
-  const dl = $('#advlist'); if (!dl) return;
-  const list = ((D().lists || {}).adventures || []).filter(a => !rank || a.rank === rank);
-  dl.innerHTML = [...new Set(list.map(a => a.name))].sort().map(n => '<option value="' + esc(n) + '">').join('');
-}
 function scoutbookView() {
-  const q = (D().advancement || []).filter(a => !a.inScoutbook).sort((a, b) => a.scout.localeCompare(b.scout) || a.date.localeCompare(b.date));
+  const q = sbQueue();
   const L = D().links || {};
   const sb = D().scoutbookImport;
   let out = '<p style="margin-top:0">These were logged in the app but not entered in Scoutbook yet. Enter them there, tick them off, then tap Mark as entered. Importing a Scoutbook export ticks off matches for you.</p>';
@@ -593,9 +611,23 @@ function scoutbookView() {
     (sb && sb.notOnScoutsTab && sb.notOnScoutsTab.length ? '<div class="s" style="margin-top:6px"><span class="pill wait">Not on Scouts tab</span> ' + esc(sb.notOnScoutsTab.join(', ')) + '</div>' : '') +
     '<div class="s" style="margin-top:6px">To update: in Scoutbook Plus, Reports, Quick Export, Advancement. Save the file into the Pack 828 App Scoutbook Exports folder in Drive. It shows up here within 15 minutes.</div></div></div></div>';
   if (!q.length) return out + '<div class="list"><div class="none">All caught up. Everything logged is in Scoutbook.</div></div>';
-  out += '<form data-form="markScoutbook"><div class="list">' + q.map(a => '<label class="row"><input type="checkbox" class="check" name="ids" value="' + esc(a.id) + '"><div class="grow"><div class="t">' + esc(a.scout) + '</div><div class="s">' + esc(a.item) + ', ' + esc(shortDate(a.date)) + '</div></div></label>').join('') +
+  out += '<form data-form="markScoutbook"><div class="list">' + q.map(a => '<label class="row"><input type="checkbox" class="check" name="ids" value="' + esc(a.ids.join(',')) + '"><div class="grow"><div class="t">' + esc(a.scout) + '</div><div class="s">' +
+    esc(a.item) + (a.rank ? ' (' + esc(a.rank) + ')' : '') + ': ' + esc(a.what) + ', ' + esc(shortDate(a.date)) + '</div></div></label>').join('') +
     '</div><p><button class="btn primary block" type="submit">Mark as entered in Scoutbook</button></p></form>';
   return out;
+}
+/* What leaders logged in the app that isn't in Scoutbook yet: whole adventures, and requirements grouped by scout + adventure */
+function sbQueue() {
+  const out = (D().advancement || []).filter(a => a.source !== 'Scoutbook' && !a.inScoutbook)
+    .map(a => ({ ids: [a.id], scout: a.scout, item: a.item, rank: a.rank, what: 'whole adventure complete', date: a.date }));
+  const groups = {};
+  (D().denLog || []).filter(r => !r.inScoutbook).forEach(r => {
+    const k = r.scout + '|' + r.rank + '|' + ik(r.item);
+    const g = groups[k] = groups[k] || { ids: [], scout: r.scout, item: r.item, rank: r.rank, reqs: [], date: r.date };
+    g.ids.push(r.id); g.reqs.push(r); if (r.date > g.date) g.date = r.date;
+  });
+  Object.values(groups).forEach(g => out.push(Object.assign(g, { what: 'requirement' + (g.reqs.length === 1 ? ' ' : 's ') + g.reqs.slice().sort(byReq).map(r => r.req).join(', ') })));
+  return out.sort((a, b) => a.scout.localeCompare(b.scout) || a.date.localeCompare(b.date));
 }
 function advSheet(id) {
   const a = (D().advancement || []).find(x => x.id === id); if (!a || !U().isLeader) return;
@@ -717,13 +749,18 @@ function moreView() {
 }
 
 /* ---------- Bottom sheet + forms ---------- */
+let lockY = 0;
+function lockScroll() { if (document.body.classList.contains('locked')) return; lockY = window.scrollY; document.body.style.top = -lockY + 'px'; document.body.classList.add('locked'); }
+function unlockScroll() { if (!document.body.classList.contains('locked')) return; document.body.classList.remove('locked'); document.body.style.top = ''; window.scrollTo(0, lockY); }
 function openSheet(html) {
+  lockScroll();
   $('#sheet-body').innerHTML = html;
+  $('#sheet').scrollTop = 0;
   $('#scrim').classList.add('open'); $('#sheet').classList.add('open');
   const f = $('#sheet-body').querySelector('input:not([type=checkbox]):not([type=file]),textarea');
   if (f && !f.value && !$('#sheet-body').querySelector('[type=file]')) setTimeout(() => f.focus(), 250);
 }
-function closeSheet() { $('#scrim').classList.remove('open'); $('#sheet').classList.remove('open'); }
+function closeSheet() { $('#scrim').classList.remove('open'); $('#sheet').classList.remove('open'); unlockScroll(); }
 
 function newAnnouncementSheet() {
   const L = D().links || {};
@@ -747,18 +784,74 @@ function newTodoSheet() {
     '<p class="err" hidden></p><button class="btn primary block" type="submit">Add to-do</button></form>');
 }
 function newAdvSheet() {
-  const scouts = (D().scouts || []).slice(), ranks = (D().lists || {}).ranks || [];
-  const groups = {}; scouts.forEach(s => { (groups[s.rank || 'No rank set'] = groups[s.rank || 'No rank set'] || []).push(s); });
-  const order = ranks.concat(Object.keys(groups).filter(k => !ranks.includes(k)));
-  const known = new Set(((D().lists || {}).adventures || []).map(a => a.name));
-  openSheet('<h2 id="sheet-title">Log an adventure</h2><form data-form="logAdvancement">' +
-    '<span style="display:block;font-size:14px;font-weight:600;margin-bottom:4px">Scouts who finished it</span><div class="picklist">' +
-    order.filter(r => groups[r]).map(r => '<div class="grp">' + esc(r) + '</div>' + groups[r].map(s => '<label><input type="checkbox" class="check" name="scouts" value="' + esc(s.name) + '" data-rank="' + esc(s.rank) + '"> ' + esc(s.name) + '</label>').join('')).join('') + '</div>' +
-    '<label class="f"><span>Rank</span><select class="in" name="rank"><option value="">Pick a rank</option>' + ranks.map(r => '<option>' + esc(r) + '</option>').join('') + '</select></label>' +
-    '<label class="f"><span>Adventure or award</span><input class="in" name="item" list="advlist" maxlength="150" required></label><datalist id="advlist">' + [...known].sort().map(n => '<option value="' + esc(n) + '">').join('') + '</datalist>' +
-    '<div class="two"><label class="f"><span>Date finished</span><input class="in" type="date" name="date" value="' + todayStr() + '" required></label>' +
+  const ranks = (D().lists || {}).ranks || RANKS;
+  const counts = {}; (D().scouts || []).forEach(s => { if (s.rank) counts[s.rank] = (counts[s.rank] || 0) + 1; });
+  const saved = localStorage.getItem('p828.advRank');
+  const def = ranks.includes(saved) ? saved : (Object.keys(counts).sort((a, b) => counts[b] - counts[a])[0] || ranks[0]);
+  openSheet('<h2 id="sheet-title">Log den progress</h2><form data-form="logAdvancement">' +
+    '<label class="f"><span>Rank</span><select class="in" name="rank">' + ranks.map(r => '<option' + (r === def ? ' selected' : '') + '>' + esc(r) + '</option>').join('') + '</select></label>' +
+    '<label class="f"><span>Adventure</span><select class="in" name="item"></select></label>' +
+    '<input class="in" name="itemOther" placeholder="Adventure or award name" maxlength="150" hidden style="margin:-6px 0 14px">' +
+    '<div class="field"><div class="lbl-row"><span class="lbl">Requirements finished</span><button type="button" class="link" data-act="reqsAll">Select all</button></div>' +
+    '<div class="chips" id="reqChips"></div><p class="hint" id="reqHint" style="margin:4px 0 0"></p></div>' +
+    '<label class="toggle"><input type="checkbox" class="check" name="complete"> The whole adventure is complete</label>' +
+    '<div class="field"><div class="lbl-row"><span class="lbl">Scouts</span><button type="button" class="link" data-act="scoutsAll">Select all</button></div>' +
+    '<div class="chips" id="scoutChips"></div><button type="button" class="link" data-act="scoutsOther" id="scoutsOtherBtn"></button></div>' +
+    '<div class="two"><label class="f"><span>Date</span><input class="in" type="date" name="date" value="' + todayStr() + '" required></label>' +
     '<label class="f"><span>Note (optional)</span><input class="in" name="note" maxlength="300"></label></div>' +
-    '<p class="err" hidden></p><button class="btn primary block" type="submit">Log it</button></form>');
+    '<p class="err" hidden></p><button class="btn primary block" type="submit">Save</button></form>');
+  const f = $('#sheet-body form');
+  fillAdvSelect(f); drawScoutChips(f); drawReqChips(f);
+}
+function fillAdvSelect(f) {
+  const rank = f.rank.value, list = ((D().lists || {}).adventures || []).filter(a => a.rank === rank);
+  const opt = a => '<option value="' + esc(a.name) + '">' + esc(a.name) + '</option>';
+  const req = list.filter(a => a.type === 'Required'), el = list.filter(a => a.type !== 'Required');
+  f.item.innerHTML = '<option value="">Pick an adventure</option>' +
+    (req.length ? '<optgroup label="Required">' + req.map(opt).join('') + '</optgroup>' : '') +
+    (el.length ? '<optgroup label="Elective">' + el.slice().sort((a, b) => a.name.localeCompare(b.name)).map(opt).join('') + '</optgroup>' : '') +
+    '<option value="__other">Something else (type it)</option>';
+  f.itemOther.hidden = true;
+}
+function drawScoutChips(f) {
+  const rank = f.rank.value, all = f.dataset.allScouts === '1';
+  const picked = new Set([...f.querySelectorAll('input[name=scouts]:checked')].map(b => b.value));
+  const scouts = (D().scouts || []).slice().sort((a, b) => a.name.localeCompare(b.name));
+  const mine = scouts.filter(s => s.rank === rank), others = scouts.filter(s => s.rank !== rank);
+  const chip = s => '<label class="chip name"><input type="checkbox" name="scouts" value="' + esc(s.name) + '"' + (picked.has(s.name) ? ' checked' : '') + '><span>' + esc(s.name) + '</span></label>';
+  $('#scoutChips').innerHTML = (mine.length ? mine.map(chip).join('') : '<span class="small">No scouts are set to ' + esc(rank) + ' on the Scouts tab.</span>') +
+    (all ? others.map(chip).join('') : '');
+  const btn = $('#scoutsOtherBtn');
+  btn.hidden = !others.length; btn.textContent = all ? 'Show only ' + rank + ' scouts' : 'Show scouts from other ranks';
+}
+function scoutHasReq(scout, rank, item, req) {
+  const k = rank + '|' + ik(item) + '|' + String(req).toLowerCase();
+  const hit = r => r.scout === scout && (r.rank + '|' + ik(r.item) + '|' + String(r.req).toLowerCase()) === k;
+  return (D().requirements || []).some(hit) || (D().denLog || []).some(hit);
+}
+function drawReqChips(f) {
+  const rank = f.rank.value, item = f.item.value === '__other' ? '' : f.item.value, box = $('#reqChips'), hint = $('#reqHint');
+  if (!item) {
+    box.innerHTML = '<span class="small">' + (f.item.value === '__other' ? 'For something not on the list, mark the whole adventure complete.' : 'Pick an adventure first.') + '</span>';
+    hint.textContent = ''; return;
+  }
+  const k = ik(item), seen = new Set();
+  (D().requirements || []).concat(D().denLog || []).forEach(r => { if (r.rank === rank && ik(r.item) === k && String(r.req).trim()) seen.add(String(r.req).trim()); });
+  const nums = [...seen].filter(x => /^\d+$/.test(x)).map(Number), lettered = [...seen].filter(x => !/^\d+$/.test(x));
+  const letteredNums = new Set(lettered.map(x => parseInt(x, 10)).filter(n => !isNaN(n)));
+  const max = (nums.length ? Math.max(...nums) : (lettered.length ? 0 : 6)) + (Number(f.dataset.extra) || 0);
+  const ids = [];
+  for (let i = 1; i <= max; i++) if (!letteredNums.has(i)) ids.push(String(i));
+  lettered.forEach(x => ids.push(x));
+  ids.sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+  const picked = new Set([...f.querySelectorAll('input[name=reqs]:checked')].map(b => b.value));
+  const scouts = [...f.querySelectorAll('input[name=scouts]:checked')].map(b => b.value);
+  box.innerHTML = ids.map(id => {
+    const done = scouts.length > 0 && scouts.every(s => scoutHasReq(s, rank, item, id));
+    return '<label class="chip"><input type="checkbox" name="reqs" value="' + esc(id) + '"' + (done ? ' disabled' : (picked.has(id) ? ' checked' : '')) + '><span>' + (done ? '&#10003; ' : '') + esc(id) + '</span></label>';
+  }).join('') + '<button type="button" class="chip" data-act="reqMore" aria-label="Add another requirement number" style="border:0;background:none;padding:0"><span>+</span></button>';
+  hint.textContent = (seen.size ? 'Numbers come from the pack\'s Scoutbook records.' : 'Numbers match the handbook.') + ' Tap + if this adventure has more.' +
+    (scouts.length ? ' Green ones are already recorded for every scout you picked.' : '');
 }
 function balanceSheet(scout) {
   const scouts = (D().scouts || []).map(s => s.name), b = (D().balances || []).find(x => x.scout === scout);
@@ -849,6 +942,11 @@ const actions = {
   expense: el => expenseSheet(el.dataset.id),
   advItem: el => advSheet(el.dataset.id),
   advDetail: el => advDetailSheet(el),
+  delDen: async el => { if (!confirm('Remove this requirement from what was logged in the app?')) return; closeSheet(); await run(() => api('deleteAdvancement', { ids: [el.dataset.id] }), 'Removed'); },
+  reqMore: el => { const f = el.closest('form'); f.dataset.extra = String((Number(f.dataset.extra) || 0) + 1); drawReqChips(f); },
+  scoutsAll: el => { const f = el.closest('form'); const boxes = [...f.querySelectorAll('input[name=scouts]')]; const all = boxes.length && boxes.every(b => b.checked); boxes.forEach(b => { b.checked = !all; }); drawReqChips(f); },
+  reqsAll: el => { const f = el.closest('form'); const boxes = [...f.querySelectorAll('input[name=reqs]:not(:disabled)')]; const all = boxes.length && boxes.every(b => b.checked); boxes.forEach(b => { b.checked = !all; }); },
+  scoutsOther: el => { const f = el.closest('form'); f.dataset.allScouts = f.dataset.allScouts === '1' ? '' : '1'; drawScoutChips(f); },
   expFilter: el => { S.expFilter = el.dataset.f; render(); },
   syncLedger: async el => {
     el.disabled = true; el.textContent = 'Syncing...';
@@ -876,8 +974,12 @@ document.addEventListener('click', e => {
 
 document.addEventListener('change', async e => {
   const el = e.target;
-  if (el.name === 'scouts' && el.checked && el.dataset.rank && el.form && el.form.rank && !el.form.rank.value) { el.form.rank.value = el.dataset.rank; fillAdvList(el.dataset.rank); }
-  if (el.name === 'rank' && el.form && el.form.dataset.form === 'logAdvancement') fillAdvList(el.value);
+  if (el.form && el.form.dataset.form === 'logAdvancement') {
+    const f = el.form;
+    if (el.name === 'rank') { f.dataset.extra = ''; fillAdvSelect(f); drawScoutChips(f); drawReqChips(f); }
+    if (el.name === 'item') { f.itemOther.hidden = el.value !== '__other'; f.dataset.extra = ''; drawReqChips(f); }
+    if (el.name === 'scouts') drawReqChips(f);
+  }
   if (el.dataset.act === 'pickScout') { S.scout = el.value; localStorage.setItem('p828.scout', S.scout); render(); }
   if (el.dataset.act === 'receiptPick') {
     const f = el.files[0], img = $('#thumb');
@@ -917,9 +1019,16 @@ document.addEventListener('submit', async e => {
     }
     if (kind === 'addTodo') { await api('addTodo', { task: val('task'), assignedTo: val('assignedTo') || U().email, due: val('due') }); closeSheet(); toast('To-do added'); }
     if (kind === 'logAdvancement') {
-      const scouts = fd.getAll('scouts'); if (!scouts.length) throw new Error('Pick at least one scout.');
-      const r = await api('logAdvancement', { scouts, rank: val('rank'), item: val('item'), date: val('date'), note: val('note') });
-      closeSheet(); toast('Logged for ' + r.count + (r.count === 1 ? ' scout' : ' scouts'));
+      const item = val('item') === '__other' ? val('itemOther') : val('item');
+      if (!val('rank')) throw new Error('Pick the rank.');
+      if (!item) throw new Error('Pick the adventure.');
+      const reqs = fd.getAll('reqs'), complete = !!fd.get('complete'), scouts = fd.getAll('scouts');
+      if (!reqs.length && !complete) throw new Error('Tick the requirements they finished, or mark the whole adventure complete.');
+      if (!scouts.length) throw new Error('Pick at least one scout.');
+      localStorage.setItem('p828.advRank', val('rank'));
+      const r = await api('logAdvancement', { scouts, rank: val('rank'), item, reqs, complete, date: val('date'), note: val('note') });
+      closeSheet();
+      toast((r.added ? r.added + (r.added === 1 ? ' requirement' : ' requirements') + ' saved' : 'Saved') + (r.completed ? ', ' + r.completed + ' marked complete' : '') + (r.skipped ? '. ' + r.skipped + ' were already recorded' : ''));
     }
     if (kind === 'setBalance') {
       const n = Number(val('balance').replace(/[$,\s]/g, '')); if (isNaN(n)) throw new Error('Enter the balance as a number, like 125.50');
@@ -939,8 +1048,9 @@ document.addEventListener('submit', async e => {
       await api('updateExpense', { id: form.dataset.id, status, note: val('note') }); closeSheet(); toast('Expense updated');
     }
     if (kind === 'markScoutbook') {
-      const ids = fd.getAll('ids'); if (!ids.length) throw new Error('Tick the ones you entered in Scoutbook first.');
-      await api('markScoutbook', { ids, value: true }); toast(ids.length + ' marked entered in Scoutbook');
+      const picked = fd.getAll('ids'); if (!picked.length) throw new Error('Tick the ones you entered in Scoutbook first.');
+      const ids = picked.join(',').split(',').filter(Boolean);
+      await api('markScoutbook', { ids, value: true }); toast(picked.length + ' marked entered in Scoutbook');
     }
     await refresh(true);
   } catch (ex) {

@@ -1,5 +1,5 @@
 // Pack 828 app service worker: keeps the app opening offline. Bump CACHE when you change files.
-const CACHE = 'p828-app-v7';
+const CACHE = 'p828-app-v8';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icons/icon-96.png', './icons/icon-192.png', './icons/icon-512.png', './icons/maskable-512.png', './icons/apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
